@@ -104,3 +104,20 @@ describe('category icons', () => {
     expect(normalizeIcon('bills')).toBe('bills')
   })
 })
+
+import { normalizeTheme, resolveTheme } from './theme.js'
+
+describe('theme preference', () => {
+  it('only accepts light, dark or system', () => {
+    expect(normalizeTheme('dark')).toBe('dark')
+    expect(normalizeTheme('light')).toBe('light')
+    expect(normalizeTheme('sepia')).toBe('system')
+    expect(normalizeTheme(null)).toBe('system')
+  })
+  it('system follows the phone; explicit choices ignore it', () => {
+    expect(resolveTheme('system', true)).toBe('dark')
+    expect(resolveTheme('system', false)).toBe('light')
+    expect(resolveTheme('light', true)).toBe('light')
+    expect(resolveTheme('dark', false)).toBe('dark')
+  })
+})

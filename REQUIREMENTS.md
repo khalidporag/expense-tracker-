@@ -26,7 +26,7 @@ Personal expense tracker for one user, installed on a phone as a PWA.
 ## Non-functional requirements
 - Mobile-first, usable one-handed; fast add flow (amount first)
 - Works offline; installable to home screen
-- Dark mode follows system setting
+- Light and dark themes; Settings lets you pick System (default, follows the phone), Light or Dark
 - No accounts, no tracking, no third-party services
 
 ## Out of scope (for now)

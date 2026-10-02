@@ -172,6 +172,42 @@ const ok = (c, m) => { if (c) console.log('✓', m); else { console.log('✗ FAI
   await page.click('button[aria-label^="September"]') // label button jumps back to this month
   await expectText('.hero', /Safe to spend today/i, 'label button returns to this month')
 
+  // --- theme setting: System / Light / Dark ---
+  const themeState = () => page.evaluate(() => ({ attr: document.documentElement.dataset.theme, bg: getComputedStyle(document.body).backgroundColor, saved: localStorage.getItem('expense-tracker-theme') }))
+  const LIGHT_BG = 'rgb(244, 244, 241)'
+  const DARK_BG = 'rgb(11, 15, 23)'
+  await page.click('button[aria-label^="Settings"]')
+  await expectText('[aria-label="Appearance"]', /System[\s\S]*Light[\s\S]*Dark/, 'settings: Appearance offers System / Light / Dark')
+  let t = await themeState()
+  ok(t.attr === 'light' && t.bg === LIGHT_BG, `system follows a light phone (${t.attr}, ${t.bg})`)
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await page.waitForFunction(() => document.documentElement.dataset.theme === 'dark')
+  t = await themeState()
+  ok(t.bg === DARK_BG, `system switches live when the phone goes dark (${t.bg})`)
+  await page.click('[aria-label="Appearance"] button:has-text("Light")')
+  t = await themeState()
+  ok(t.attr === 'light' && t.bg === LIGHT_BG && t.saved === 'light', 'choosing Light overrides a dark phone and is saved')
+  await page.reload()
+  await page.waitForSelector('.nav')
+  t = await themeState()
+  ok(t.attr === 'light' && t.bg === LIGHT_BG, 'Light persists after reload (even though the phone is dark)')
+  await page.emulateMedia({ colorScheme: 'light' })
+  await page.click('button[aria-label^="Settings"]')
+  await page.click('[aria-label="Appearance"] button:has-text("Dark")')
+  t = await themeState()
+  ok(t.attr === 'dark' && t.bg === DARK_BG && t.saved === 'dark', 'choosing Dark overrides a light phone and is saved')
+  await noOverflow('Settings (dark)')
+  await page.screenshot({ path: `${S}/settings-dark.png` })
+  await page.reload()
+  await page.waitForSelector('.nav')
+  t = await themeState()
+  ok(t.attr === 'dark' && t.bg === DARK_BG, 'Dark persists after reload')
+  await page.click('button[aria-label^="Settings"]')
+  await page.click('[aria-label="Appearance"] button:has-text("System")')
+  t = await themeState()
+  ok(t.attr === 'light' && t.saved === 'system', 'back to System follows the (light) phone again')
+  await page.click('button:has-text("Back")')
+
   // --- dark mode ---
   const dark = await browser.newContext({ viewport: { width: 390, height: 800 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, colorScheme: 'dark' })
   await dark.clock.setFixedTime(new Date(2026, 9, 18, 12, 0, 0))

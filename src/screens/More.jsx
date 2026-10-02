@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import Icon, { CategoryIcon } from '../components/Icon.jsx'
-import { Empty } from '../components/Bits.jsx'
+import { Empty, Segmented } from '../components/Bits.jsx'
 import CategoryForm from '../forms/CategoryForm.jsx'
 import RecurringForm from '../forms/RecurringForm.jsx'
 import { useCategories } from '../hooks/useCategories.js'
@@ -10,6 +10,7 @@ import { exportBackup, importBackup } from '../db/backup.js'
 import { nextDue } from '../lib/recurring.js'
 import { formatMoney } from '../lib/money.js'
 import { shortDay, today } from '../lib/dates.js'
+import { getThemePref, setThemePref } from '../lib/theme.js'
 
 const Back = ({ onClick, children }) => (
   <div className="section-head">
@@ -112,6 +113,18 @@ function Backup({ onBack }) {
   )
 }
 
+function Appearance() {
+  const [pref, setPref] = useState(getThemePref())
+  const choose = (v) => { setThemePref(v); setPref(v) }
+  return (
+    <section className="card sm stack tight" aria-label="Appearance">
+      <div className="between"><strong>Appearance</strong><span className="muted small">{pref === 'system' ? 'Matches your phone' : `Always ${pref}`}</span></div>
+      <Segmented label="Theme" value={pref} onChange={choose}
+        options={[{ value: 'system', label: 'System' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} />
+    </section>
+  )
+}
+
 const ITEMS = [['categories', 'tag', 'Categories'], ['recurring', 'repeat', 'Recurring'], ['backup', 'download', 'Backup & restore']]
 
 export default function More({ onBack, initialView = null }) {
@@ -124,6 +137,7 @@ export default function More({ onBack, initialView = null }) {
     <div className="stack tight">
       <Back onClick={onBack} />
       <h1 className="title">Settings</h1>
+      <Appearance />
       <ul className="list">
         {ITEMS.map(([id, icon, label]) => (
           <li key={id}>

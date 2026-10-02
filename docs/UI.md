@@ -1,7 +1,7 @@
 # UI specification
 
 Mobile-first (design width 390px), single column, max content width 560px. Bottom tab bar with a raised centre **+** button, bottom-sheet forms.
-Light and dark themes follow the system setting (`styles/tokens.css`). Visual direction: warm-neutral ground, near-black hero card, blue = healthy / orange = needs attention, Bricolage Grotesque for figures and headings, Figtree for text.
+Light and dark themes (`styles/tokens.css`). **Settings → Appearance** chooses System (follows the phone, live), Light or Dark; the choice is saved on the device and applied before first paint. Visual direction: warm-neutral ground, near-black hero card, blue = healthy / orange = needs attention, Bricolage Grotesque for figures and headings, Figtree for text.
 The original design canvas ("Expense Tracker Redesign") is the visual reference; this file is the behavioural spec.
 
 ## Navigation
@@ -26,7 +26,7 @@ Summary (left of total, pace marker, per-day available, forecast) · cards per b
 Search notes · filter chips (All/Expenses/Income, Category, Dates) · totals for the filtered set · entries grouped by day with the day's net · "Load older entries" (60 at a time).
 
 ### More
-Settings list → Categories (icon picker), Recurring, Backup & restore.
+Settings: **Appearance** (System / Light / Dark) → Categories (icon picker), Recurring, Backup & restore.
 
 ## Add / edit entry (sheet)
 Expense/Income toggle → large amount with a **built-in keypad** (no system keyboard; physical digits and Backspace also work) → live **budget impact** line ("Food would be ৳2,950 over budget…") → categories ranked by recent use → *Repeat* chips from recent entries → date (relative label, native picker) and optional note → Save (states the amount). Edit adds Delete. Save is disabled until amount > 0.

@@ -47,41 +47,40 @@
   --nav-h: 72px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ground: #0b0f17;
-    --surface: #141a26;
-    --ink: #e8ecf2;
-    --muted: #98a1b0;
-    --line: #232b3a;
-    --line-strong: #323c4f;
-    --soft: #1e2635;
-    --field: #1c2433;
+/* Set on <html> by index.html / lib/theme.js (resolves 'system' from the phone's setting). */
+:root[data-theme='dark'] {
+  --ground: #0b0f17;
+  --surface: #141a26;
+  --ink: #e8ecf2;
+  --muted: #98a1b0;
+  --line: #232b3a;
+  --line-strong: #323c4f;
+  --soft: #1e2635;
+  --field: #1c2433;
 
-    --blue: #7c9bff;
-    --on-blue: #0b1020;
-    --blue-ink: #a8beff;
-    --blue-tint: #1a2547;
-    --orange: #ff9a5c;
-    --on-orange: #1a0e05;
-    --orange-ink: #ffb085;
-    --orange-tint: #33201a;
-    --amber: #e8a24a;
-    --amber-ink: #f6c877;
-    --amber-tint: #33270f;
-    --track: #263044;
+  --blue: #7c9bff;
+  --on-blue: #0b1020;
+  --blue-ink: #a8beff;
+  --blue-tint: #1a2547;
+  --orange: #ff9a5c;
+  --on-orange: #1a0e05;
+  --orange-ink: #ffb085;
+  --orange-tint: #33201a;
+  --amber: #e8a24a;
+  --amber-ink: #f6c877;
+  --amber-tint: #33270f;
+  --track: #263044;
 
-    --btn-bg: #e8ecf2;
-    --btn-fg: #0b0f17;
+  --btn-bg: #e8ecf2;
+  --btn-fg: #0b0f17;
 
-    --hero-bg: #1d2638;
-    --hero-track: #2f3a52;
+  --hero-bg: #1d2638;
+  --hero-track: #2f3a52;
 
-    --c1: #e8ecf2;
-    --c2: #7c9bff;
-    --c3: #5575e0;
-    --c4: #3f58b0;
-    --c5: #2e4180;
-    --c6: #24325f;
-  }
+  --c1: #e8ecf2;
+  --c2: #7c9bff;
+  --c3: #5575e0;
+  --c4: #3f58b0;
+  --c5: #2e4180;
+  --c6: #24325f;
 }

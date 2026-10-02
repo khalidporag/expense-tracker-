@@ -31,7 +31,7 @@ src/
     actions.js        ALL writes live here (incl. moveBudget, runRecurring)
     backup.js         JSON export/import
   lib/                PURE logic, no React, no DB, unit-tested: money, dates, recurring, summary, insights
-  styles/             tokens.css (light + dark) · base.css · components.css
+  styles/             tokens.css (light; dark under :root[data-theme='dark']) · base.css · components.css
 e2e/                  smoke.cjs (browser test), fixture-backup.json + make-fixture.cjs (the design's sample month)
 docs/UI.md            screen specs and design rules
 .claude/              settings, session-start hook, slash commands
@@ -59,7 +59,8 @@ Rule of thumb: logic that can be pure goes in `lib/` with a test; DB writes go i
 12. **Category icons are drawn SVG keys, not emoji.** Add a new icon to `iconPaths.js` and `CATEGORY_ICON_KEYS` (a test checks they match).
 13. **Never convey state by colour alone**: over/low/on-track also say it in words and over-budget bars are hatched. Blue/orange (not red/green) for good/bad.
 14. **Fonts are bundled** (no CDN); only the Latin subsets are precached for offline use (`vite.config.js`).
-15. **Deploy base path is `/expense-tracker-/`** (`vite.config.js`). Reference public assets with `%BASE_URL%` in `index.html`, never bare `/`.
+15. **Theme is `data-theme` on `<html>`** (`light` | `dark`, resolved from the System/Light/Dark preference in `lib/theme.js`). The preference lives in localStorage (per-device UI setting, not in backups). `index.html` applies it before first paint and has a copy of the logic — keep both in sync. Add new colours as tokens in both blocks of `tokens.css`; never hard-code colours or use `@media (prefers-color-scheme)` in components.
+16. **Deploy base path is `/expense-tracker-/`** (`vite.config.js`). Reference public assets with `%BASE_URL%` in `index.html`, never bare `/`.
 
 ## Testing expectations
 - New logic in `lib/` → add cases to `src/lib/lib.test.js`.
