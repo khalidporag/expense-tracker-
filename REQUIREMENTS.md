@@ -18,8 +18,10 @@ Personal expense tracker for one user, installed on a phone as a PWA.
    (monthly, weekly); entries are generated automatically when due (on app open and on save).
    A start date in the past back-fills the missed entries. Month-end dates clamp (31st → 28th/29th/30th) without drifting.
 6. **Search and filters**: by text (note), category, date range
-7. **Monthly summary**: total spent, income, balance, per-category breakdown
-8. **Backup**: export and import JSON
+7. **Monthly summary**: total spent, income, kept, per-category breakdown with change vs last month
+8. **Daily allowance**: safe-to-spend per day from budgets, with pace and month-end forecast
+9. **Insights & actions**: ranked "do this next" cards, forecast chart, what-if cap calculator, savings rate, weekday pattern, biggest entries, budget move suggestions
+10. **Backup**: export and import JSON
 
 ## Non-functional requirements
 - Mobile-first, usable one-handed; fast add flow (amount first)

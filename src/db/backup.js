@@ -1,4 +1,5 @@
 import { db } from './index.js'
+import { normalizeIcon } from './seed.js'
 
 const TABLES = ['categories', 'transactions', 'budgets', 'recurring']
 const FORMAT = 'expense-tracker-backup'
@@ -19,6 +20,7 @@ export async function importBackup(text) {
   }
   if (data?.format !== FORMAT) throw new Error('That file is not an Expense Tracker backup.')
   for (const t of TABLES) if (!Array.isArray(data[t])) throw new Error(`Backup is missing "${t}".`)
+  data.categories = data.categories.map((c) => ({ ...c, icon: normalizeIcon(c.icon) }))
   await db.transaction('rw', TABLES.map((t) => db[t]), async () => {
     for (const t of TABLES) {
       await db[t].clear()

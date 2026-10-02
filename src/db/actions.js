@@ -29,6 +29,17 @@ export async function setBudget(categoryId, limit) {
   return existing ? db.budgets.update(existing.id, { limit }) : db.budgets.add({ categoryId, limit })
 }
 
+// Shifts monthly budget from one category to another (the donor keeps at least ৳1).
+export async function moveBudget(fromId, toId, amount) {
+  await db.transaction('rw', db.budgets, async () => {
+    const from = await db.budgets.where('categoryId').equals(fromId).first()
+    const to = await db.budgets.where('categoryId').equals(toId).first()
+    if (!from || !to || amount <= 0 || from.limit - amount < 100) return
+    await db.budgets.update(from.id, { limit: from.limit - amount })
+    await db.budgets.update(to.id, { limit: to.limit + amount })
+  })
+}
+
 // ---- recurring ----
 export async function saveRecurring(r) {
   await (r.id ? db.recurring.put(r) : db.recurring.add({ ...r, lastGenerated: null }))

@@ -37,17 +37,17 @@ export default function RecurringForm({ initial, onClose }) {
   return (
     <Sheet title={initial ? 'Edit recurring' : 'New recurring'} onClose={onClose}>
       <form className="form" onSubmit={submit}>
-        <Segmented value={type} onChange={setType}
+        <Segmented label="Entry type" value={type} onChange={setType}
           options={[{ value: 'expense', label: 'Expense' }, { value: 'income', label: 'Income' }]} />
-        <input autoFocus className="big" type="number" inputMode="decimal" step="0.01" min="0" placeholder="৳ 0"
+        <input autoFocus className="field big-input" type="number" inputMode="decimal" step="0.01" min="0" placeholder="৳ 0"
           aria-label="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
         <CategoryChips categories={cats} value={chosen} onChange={setCategoryId} />
-        <input type="text" placeholder="Note, e.g. Rent" aria-label="Note" value={note} onChange={(e) => setNote(e.target.value)} />
-        <Segmented value={frequency} onChange={setFrequency}
+        <input className="field" type="text" placeholder="Note, e.g. Rent" aria-label="Note" value={note} onChange={(e) => setNote(e.target.value)} />
+        <Segmented label="Frequency" value={frequency} onChange={setFrequency}
           options={[{ value: 'monthly', label: 'Monthly' }, { value: 'weekly', label: 'Weekly' }]} />
         {!initial && (
           <>
-            <label className="muted" htmlFor="rec-start">First date (past dates are added right away)</label>
+            <label className="muted small" htmlFor="rec-start">First date (past dates are added right away)</label>
             <input id="rec-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
           </>
         )}
@@ -56,9 +56,9 @@ export default function RecurringForm({ initial, onClose }) {
             <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} /> Active
           </label>
         )}
-        <div className="row">
-          {initial && <button type="button" className="danger" onClick={remove}>Delete</button>}
-          <button type="submit" className="primary" disabled={!valid}>Save</button>
+        <div className="btn-row">
+          {initial && <button type="button" className="btn lg danger" onClick={remove}>Delete</button>}
+          <button type="submit" className="btn lg blue" disabled={!valid}>Save</button>
         </div>
       </form>
     </Sheet>

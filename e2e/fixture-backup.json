@@ -1,0 +1,483 @@
+{
+ "format": "expense-tracker-backup",
+ "version": 2,
+ "exportedAt": "2026-10-18T12:00:00.000Z",
+ "categories": [
+  {
+   "id": 1,
+   "name": "Food",
+   "kind": "expense",
+   "icon": "food"
+  },
+  {
+   "id": 2,
+   "name": "Transport",
+   "kind": "expense",
+   "icon": "transport"
+  },
+  {
+   "id": 3,
+   "name": "Bills",
+   "kind": "expense",
+   "icon": "bills"
+  },
+  {
+   "id": 4,
+   "name": "Shopping",
+   "kind": "expense",
+   "icon": "shopping"
+  },
+  {
+   "id": 5,
+   "name": "Health",
+   "kind": "expense",
+   "icon": "health"
+  },
+  {
+   "id": 6,
+   "name": "Fun",
+   "kind": "expense",
+   "icon": "fun"
+  },
+  {
+   "id": 7,
+   "name": "Other",
+   "kind": "expense",
+   "icon": "box",
+   "system": true
+  },
+  {
+   "id": 8,
+   "name": "Salary",
+   "kind": "income",
+   "icon": "salary"
+  },
+  {
+   "id": 9,
+   "name": "Business",
+   "kind": "income",
+   "icon": "business"
+  },
+  {
+   "id": 10,
+   "name": "Gift",
+   "kind": "income",
+   "icon": "gift"
+  },
+  {
+   "id": 11,
+   "name": "Other",
+   "kind": "income",
+   "icon": "coins",
+   "system": true
+  }
+ ],
+ "transactions": [
+  {
+   "id": 1,
+   "type": "income",
+   "date": "2026-10-01",
+   "amount": 5500000,
+   "categoryId": 8,
+   "note": "October salary",
+   "recurringId": 3
+  },
+  {
+   "id": 2,
+   "type": "expense",
+   "date": "2026-10-01",
+   "amount": 520000,
+   "categoryId": 3,
+   "note": "Rent",
+   "recurringId": 1
+  },
+  {
+   "id": 3,
+   "type": "expense",
+   "date": "2026-10-02",
+   "amount": 240000,
+   "categoryId": 1,
+   "note": "Groceries"
+  },
+  {
+   "id": 4,
+   "type": "expense",
+   "date": "2026-10-03",
+   "amount": 120000,
+   "categoryId": 2,
+   "note": "Ride share"
+  },
+  {
+   "id": 5,
+   "type": "expense",
+   "date": "2026-10-04",
+   "amount": 190000,
+   "categoryId": 1,
+   "note": "Dinner"
+  },
+  {
+   "id": 6,
+   "type": "expense",
+   "date": "2026-10-05",
+   "amount": 30000,
+   "categoryId": 5,
+   "note": "Medicine"
+  },
+  {
+   "id": 7,
+   "type": "expense",
+   "date": "2026-10-06",
+   "amount": 52000,
+   "categoryId": 1,
+   "note": "Lunch"
+  },
+  {
+   "id": 8,
+   "type": "expense",
+   "date": "2026-10-07",
+   "amount": 90000,
+   "categoryId": 2,
+   "note": "Fuel"
+  },
+  {
+   "id": 9,
+   "type": "expense",
+   "date": "2026-10-08",
+   "amount": 230000,
+   "categoryId": 1,
+   "note": "Groceries"
+  },
+  {
+   "id": 10,
+   "type": "expense",
+   "date": "2026-10-09",
+   "amount": 100000,
+   "categoryId": 1,
+   "note": "Dinner"
+  },
+  {
+   "id": 11,
+   "type": "expense",
+   "date": "2026-10-09",
+   "amount": 110000,
+   "categoryId": 4,
+   "note": "Headphones"
+  },
+  {
+   "id": 12,
+   "type": "expense",
+   "date": "2026-10-10",
+   "amount": 110000,
+   "categoryId": 2,
+   "note": "Ride share"
+  },
+  {
+   "id": 13,
+   "type": "expense",
+   "date": "2026-10-11",
+   "amount": 165000,
+   "categoryId": 1,
+   "note": "Dinner"
+  },
+  {
+   "id": 14,
+   "type": "expense",
+   "date": "2026-10-12",
+   "amount": 50000,
+   "categoryId": 1,
+   "note": "Lunch"
+  },
+  {
+   "id": 15,
+   "type": "expense",
+   "date": "2026-10-13",
+   "amount": 90000,
+   "categoryId": 2,
+   "note": "Fuel"
+  },
+  {
+   "id": 16,
+   "type": "expense",
+   "date": "2026-10-14",
+   "amount": 38000,
+   "categoryId": 1,
+   "note": "Lunch"
+  },
+  {
+   "id": 17,
+   "type": "expense",
+   "date": "2026-10-14",
+   "amount": 40000,
+   "categoryId": 3,
+   "note": "Phone bill"
+  },
+  {
+   "id": 18,
+   "type": "income",
+   "date": "2026-10-15",
+   "amount": 700000,
+   "categoryId": 9,
+   "note": "Freelance payment"
+  },
+  {
+   "id": 19,
+   "type": "expense",
+   "date": "2026-10-16",
+   "amount": 45000,
+   "categoryId": 1,
+   "note": "Lunch"
+  },
+  {
+   "id": 20,
+   "type": "expense",
+   "date": "2026-10-16",
+   "amount": 38000,
+   "categoryId": 2,
+   "note": "Ride share"
+  },
+  {
+   "id": 21,
+   "type": "expense",
+   "date": "2026-10-16",
+   "amount": 60000,
+   "categoryId": 6,
+   "note": "Movie"
+  },
+  {
+   "id": 22,
+   "type": "expense",
+   "date": "2026-10-17",
+   "amount": 215000,
+   "categoryId": 1,
+   "note": "Groceries · Shwapno"
+  },
+  {
+   "id": 23,
+   "type": "expense",
+   "date": "2026-10-17",
+   "amount": 34000,
+   "categoryId": 5,
+   "note": "Pharmacy"
+  },
+  {
+   "id": 24,
+   "type": "expense",
+   "date": "2026-10-18",
+   "amount": 185000,
+   "categoryId": 1,
+   "note": "Dinner · Gulshan Kitchen"
+  },
+  {
+   "id": 25,
+   "type": "expense",
+   "date": "2026-10-18",
+   "amount": 12000,
+   "categoryId": 2,
+   "note": "Rickshaw"
+  },
+  {
+   "id": 26,
+   "type": "expense",
+   "date": "2026-09-01",
+   "amount": 500000,
+   "categoryId": 3,
+   "note": "Rent",
+   "recurringId": 1
+  },
+  {
+   "id": 27,
+   "type": "expense",
+   "date": "2026-09-03",
+   "amount": 300000,
+   "categoryId": 1,
+   "note": "Groceries"
+  },
+  {
+   "id": 28,
+   "type": "expense",
+   "date": "2026-09-04",
+   "amount": 200000,
+   "categoryId": 2,
+   "note": "Ride share"
+  },
+  {
+   "id": 29,
+   "type": "expense",
+   "date": "2026-09-07",
+   "amount": 300000,
+   "categoryId": 1,
+   "note": "Dinner"
+  },
+  {
+   "id": 30,
+   "type": "expense",
+   "date": "2026-09-09",
+   "amount": 90000,
+   "categoryId": 3,
+   "note": "Bill"
+  },
+  {
+   "id": 31,
+   "type": "expense",
+   "date": "2026-09-10",
+   "amount": 170000,
+   "categoryId": 4,
+   "note": "Clothes"
+  },
+  {
+   "id": 32,
+   "type": "expense",
+   "date": "2026-09-11",
+   "amount": 300000,
+   "categoryId": 1,
+   "note": "Groceries"
+  },
+  {
+   "id": 33,
+   "type": "expense",
+   "date": "2026-09-12",
+   "amount": 210000,
+   "categoryId": 2,
+   "note": "Fuel"
+  },
+  {
+   "id": 34,
+   "type": "expense",
+   "date": "2026-09-14",
+   "amount": 90000,
+   "categoryId": 5,
+   "note": "Medicine"
+  },
+  {
+   "id": 35,
+   "type": "expense",
+   "date": "2026-09-15",
+   "amount": 300000,
+   "categoryId": 1,
+   "note": "Dinner"
+  },
+  {
+   "id": 36,
+   "type": "expense",
+   "date": "2026-09-16",
+   "amount": 30000,
+   "categoryId": 6,
+   "note": "Snacks"
+  },
+  {
+   "id": 37,
+   "type": "expense",
+   "date": "2026-09-22",
+   "amount": 600000,
+   "categoryId": 1,
+   "note": "Groceries"
+  },
+  {
+   "id": 38,
+   "type": "expense",
+   "date": "2026-09-25",
+   "amount": 200000,
+   "categoryId": 2,
+   "note": "Fuel"
+  },
+  {
+   "id": 39,
+   "type": "expense",
+   "date": "2026-09-26",
+   "amount": 430000,
+   "categoryId": 4,
+   "note": "Shoes"
+  },
+  {
+   "id": 40,
+   "type": "expense",
+   "date": "2026-09-27",
+   "amount": 60000,
+   "categoryId": 5,
+   "note": "Checkup"
+  },
+  {
+   "id": 41,
+   "type": "expense",
+   "date": "2026-09-28",
+   "amount": 310000,
+   "categoryId": 3,
+   "note": "Bills"
+  },
+  {
+   "id": 42,
+   "type": "expense",
+   "date": "2026-09-29",
+   "amount": 40000,
+   "categoryId": 6,
+   "note": "Game"
+  }
+ ],
+ "budgets": [
+  {
+   "id": 1,
+   "categoryId": 1,
+   "limit": 1400000
+  },
+  {
+   "id": 2,
+   "categoryId": 2,
+   "limit": 550000
+  },
+  {
+   "id": 3,
+   "categoryId": 3,
+   "limit": 950000
+  },
+  {
+   "id": 4,
+   "categoryId": 4,
+   "limit": 700000
+  },
+  {
+   "id": 5,
+   "categoryId": 5,
+   "limit": 300000
+  },
+  {
+   "id": 6,
+   "categoryId": 6,
+   "limit": 400000
+  }
+ ],
+ "recurring": [
+  {
+   "id": 1,
+   "type": "expense",
+   "amount": 520000,
+   "categoryId": 3,
+   "note": "Rent",
+   "frequency": "monthly",
+   "startDate": "2026-10-01",
+   "lastGenerated": "2026-10-01",
+   "active": true
+  },
+  {
+   "id": 2,
+   "type": "expense",
+   "amount": 80000,
+   "categoryId": 3,
+   "note": "Internet",
+   "frequency": "monthly",
+   "startDate": "2026-09-20",
+   "lastGenerated": "2026-09-20",
+   "active": true
+  },
+  {
+   "id": 3,
+   "type": "income",
+   "amount": 5500000,
+   "categoryId": 8,
+   "note": "Salary",
+   "frequency": "monthly",
+   "startDate": "2026-10-01",
+   "lastGenerated": "2026-10-01",
+   "active": true
+  }
+ ]
+}

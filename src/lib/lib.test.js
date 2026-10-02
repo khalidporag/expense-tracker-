@@ -88,3 +88,19 @@ describe('summary', () => {
     expect(g.map((x) => [x.date, x.items.length])).toEqual([['2026-10-02', 2], ['2026-10-01', 1]])
   })
 })
+
+import { CATEGORY_ICON_KEYS, defaultCategories, normalizeIcon } from '../db/seed.js'
+import { ICON_PATHS } from '../components/iconPaths.js'
+
+describe('category icons', () => {
+  it('every icon key has a drawing, and so does every seeded category', () => {
+    for (const k of CATEGORY_ICON_KEYS) expect(ICON_PATHS[k], k).toBeTruthy()
+    for (const c of defaultCategories()) expect(CATEGORY_ICON_KEYS).toContain(c.icon)
+  })
+  it('maps earlier emoji and unknown values to keys', () => {
+    expect(normalizeIcon('🍽️')).toBe('food')
+    expect(normalizeIcon('💰')).toBe('coins')
+    expect(normalizeIcon('🦄')).toBe('tag')
+    expect(normalizeIcon('bills')).toBe('bills')
+  })
+})

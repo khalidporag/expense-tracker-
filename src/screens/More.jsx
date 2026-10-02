@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
+import Icon, { CategoryIcon } from '../components/Icon.jsx'
 import { Empty } from '../components/Bits.jsx'
 import CategoryForm from '../forms/CategoryForm.jsx'
 import RecurringForm from '../forms/RecurringForm.jsx'
@@ -8,30 +9,38 @@ import { db } from '../db/index.js'
 import { exportBackup, importBackup } from '../db/backup.js'
 import { nextDue } from '../lib/recurring.js'
 import { formatMoney } from '../lib/money.js'
-import { dayLabel, today } from '../lib/dates.js'
+import { shortDay, today } from '../lib/dates.js'
 
-const Back = ({ onClick }) => <button className="link" onClick={onClick}>‹ Back</button>
+const Back = ({ onClick, children }) => (
+  <div className="section-head">
+    <button className="link" onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}><Icon name="chevL" size={18} stroke={2} />Back</button>
+    {children}
+  </div>
+)
 
 function Categories({ onBack }) {
   const { list } = useCategories()
   const [editing, setEditing] = useState(null) // category | 'new'
   return (
-    <>
-      <div className="section-head"><Back onClick={onBack} /><button className="link" onClick={() => setEditing('new')}>+ Add</button></div>
+    <div className="stack tight">
+      <Back onClick={onBack}><button className="link" onClick={() => setEditing('new')}>+ Add</button></Back>
+      <h1 className="title">Categories</h1>
       {['expense', 'income'].map((kind) => (
-        <section key={kind}>
-          <h3>{kind === 'expense' ? 'Expense' : 'Income'} categories</h3>
+        <section key={kind} className="stack tight">
+          <h2 className="h2">{kind === 'expense' ? 'Expense' : 'Income'}</h2>
           <ul className="list">
             {list.filter((c) => c.kind === kind).map((c) => (
-              <li key={c.id} className="row-item" onClick={() => setEditing(c)}>
-                <span className="avatar" aria-hidden="true">{c.icon}</span><strong className="grow">{c.name}</strong><span className="muted">Edit</span>
+              <li key={c.id}>
+                <button className="row-card" onClick={() => setEditing(c)} aria-label={`Edit ${c.name}`}>
+                  <CategoryIcon category={c} tone={kind === 'income' ? 'pos' : ''} /><strong className="grow">{c.name}</strong><span className="muted small">Edit</span>
+                </button>
               </li>
             ))}
           </ul>
         </section>
       ))}
       {editing && <CategoryForm initial={editing === 'new' ? undefined : editing} onClose={() => setEditing(null)} />}
-    </>
+    </div>
   )
 }
 
@@ -40,29 +49,29 @@ function Recurring({ onBack }) {
   const { byId } = useCategories()
   const [editing, setEditing] = useState(null)
   return (
-    <>
-      <div className="section-head"><Back onClick={onBack} /><button className="link" onClick={() => setEditing('new')}>+ Add</button></div>
-      <h3>Recurring</h3>
-      {rules.length === 0 && <Empty icon="🔁">No recurring items. Add rent, subscriptions, salary…</Empty>}
+    <div className="stack tight">
+      <Back onClick={onBack}><button className="link" onClick={() => setEditing('new')}>+ Add</button></Back>
+      <h1 className="title">Recurring</h1>
+      {rules.length === 0 && <Empty icon="repeat">No recurring items. Add rent, subscriptions, salary…</Empty>}
       <ul className="list">
         {rules.map((r) => {
           const c = byId.get(r.categoryId)
           return (
-            <li key={r.id} className="row-item" onClick={() => setEditing(r)}>
-              <span className="avatar" aria-hidden="true">{c?.icon}</span>
-              <div className="grow">
-                <strong>{r.note || c?.name}</strong>
-                <div className="muted">
-                  {r.frequency === 'weekly' ? 'Weekly' : 'Monthly'} · {r.active ? `next ${dayLabel(nextDue(r))}` : 'paused'}
-                </div>
-              </div>
-              <div className={r.type === 'income' ? 'amt income' : 'amt'}>{formatMoney(r.amount)}</div>
+            <li key={r.id}>
+              <button className="row-card" onClick={() => setEditing(r)}>
+                <CategoryIcon category={c} tone={r.type === 'income' ? 'pos' : ''} />
+                <span className="grow">
+                  <strong>{r.note || c?.name}</strong>
+                  <span className="muted small">{r.frequency === 'weekly' ? 'Weekly' : 'Monthly'} · {r.active ? `next ${shortDay(nextDue(r))}` : 'paused'}</span>
+                </span>
+                <span className={r.type === 'income' ? 'amt in' : 'amt'}>{formatMoney(r.amount)}</span>
+              </button>
             </li>
           )
         })}
       </ul>
       {editing && <RecurringForm initial={editing === 'new' ? undefined : editing} onClose={() => setEditing(null)} />}
-    </>
+    </div>
   )
 }
 
@@ -89,36 +98,41 @@ function Backup({ onBack }) {
     }
   }
   return (
-    <>
-      <div className="section-head"><Back onClick={onBack} /></div>
-      <h3>Backup</h3>
+    <div className="stack tight">
+      <Back onClick={onBack} />
+      <h1 className="title">Backup</h1>
       <p className="muted">Your data lives only on this phone. Export a backup regularly and keep the file somewhere safe (Drive, email to yourself).</p>
-      <div className="row">
-        <button className="primary" onClick={doExport}>Export backup</button>
-        <button className="ghost" onClick={() => file.current.click()}>Import backup</button>
+      <div className="btn-row">
+        <button className="btn lg ink" onClick={doExport}><Icon name="download" />Export</button>
+        <button className="btn lg" onClick={() => file.current.click()}><Icon name="upload" />Import</button>
       </div>
       <input ref={file} type="file" accept="application/json,.json" hidden onChange={doImport} />
       {msg && <p role="status" className="center">{msg}</p>}
-    </>
+    </div>
   )
 }
 
-export default function More() {
-  const [view, setView] = useState(null)
+const ITEMS = [['categories', 'tag', 'Categories'], ['recurring', 'repeat', 'Recurring'], ['backup', 'download', 'Backup & restore']]
+
+export default function More({ onBack, initialView = null }) {
+  const [view, setView] = useState(initialView)
   const back = () => setView(null)
   if (view === 'categories') return <Categories onBack={back} />
   if (view === 'recurring') return <Recurring onBack={back} />
   if (view === 'backup') return <Backup onBack={back} />
   return (
-    <>
-      <h3>More</h3>
+    <div className="stack tight">
+      <Back onClick={onBack} />
+      <h1 className="title">Settings</h1>
       <ul className="list">
-        {[['categories', '🏷️', 'Categories'], ['recurring', '🔁', 'Recurring'], ['backup', '💾', 'Backup & restore']].map(([id, icon, label]) => (
-          <li key={id} className="row-item" onClick={() => setView(id)}>
-            <span className="avatar" aria-hidden="true">{icon}</span><strong className="grow">{label}</strong><span className="muted">›</span>
+        {ITEMS.map(([id, icon, label]) => (
+          <li key={id}>
+            <button className="row-card" onClick={() => setView(id)}>
+              <span className="badge" style={{ width: 40, height: 40 }}><Icon name={icon} /></span><strong className="grow">{label}</strong><Icon name="chevR" />
+            </button>
           </li>
         ))}
       </ul>
-    </>
+    </div>
   )
 }

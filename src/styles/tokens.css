@@ -1,28 +1,87 @@
 :root {
-  --brand: #0f766e;
-  --brand-ink: #ffffff;
-  --bg: #f4f7f8;
+  --ground: #f4f4f1;
   --surface: #ffffff;
-  --text: #0f172a;
-  --muted: #64748b;
-  --line: #e2e8f0;
-  --income: #15803d;
-  --warn: #b45309;
-  --danger: #b91c1c;
-  --radius: 14px;
-  --nav-h: 64px;
+  --ink: #14161a;
+  --muted: #5b6068;
+  --line: #e6e6e0;
+  --line-strong: #d3d3cc;
+  --soft: #efefea;
+  --field: #f0f0ec;
+
+  --blue: #1f4fe0;
+  --on-blue: #ffffff;
+  --blue-ink: #1b3fb0;
+  --blue-tint: #e4ebfc;
+  --orange: #b8480b;
+  --on-orange: #ffffff;
+  --orange-ink: #8f3606;
+  --orange-tint: #fbe9dd;
+  --amber: #b7650a;
+  --amber-ink: #7a4b00;
+  --amber-tint: #fff1d6;
+  --track: #e3e6ec;
+
+  --btn-bg: #14161a;
+  --btn-fg: #ffffff;
+
+  --hero-bg: #14161a;
+  --hero-ink: #ffffff;
+  --hero-muted: #b7bdc8;
+  --hero-chip: #262a33;
+  --hero-track: #2b2f38;
+  --hero-fill: #ff9a5c;
+  --hero-fill-ok: #8fa9ff;
+  --hero-alert: #2a211c;
+  --hero-alert-ink: #ffc9a8;
+
+  /* category ramp, darkest first (distinguished by lightness, always paired with a label) */
+  --c1: #14161a;
+  --c2: #1f4fe0;
+  --c3: #6f8ce8;
+  --c4: #a3b7f2;
+  --c5: #cbd6f8;
+  --c6: #e1e8fa;
+
+  --font-body: 'Figtree Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Figtree Variable', system-ui, sans-serif;
+  --nav-h: 72px;
 }
+
 @media (prefers-color-scheme: dark) {
   :root {
-    --brand: #2dd4bf;
-    --brand-ink: #042f2e;
-    --bg: #0b1220;
-    --surface: #131c2e;
-    --text: #e2e8f0;
-    --muted: #94a3b8;
-    --line: #243049;
-    --income: #4ade80;
-    --warn: #fbbf24;
-    --danger: #f87171;
+    --ground: #0b0f17;
+    --surface: #141a26;
+    --ink: #e8ecf2;
+    --muted: #98a1b0;
+    --line: #232b3a;
+    --line-strong: #323c4f;
+    --soft: #1e2635;
+    --field: #1c2433;
+
+    --blue: #7c9bff;
+    --on-blue: #0b1020;
+    --blue-ink: #a8beff;
+    --blue-tint: #1a2547;
+    --orange: #ff9a5c;
+    --on-orange: #1a0e05;
+    --orange-ink: #ffb085;
+    --orange-tint: #33201a;
+    --amber: #e8a24a;
+    --amber-ink: #f6c877;
+    --amber-tint: #33270f;
+    --track: #263044;
+
+    --btn-bg: #e8ecf2;
+    --btn-fg: #0b0f17;
+
+    --hero-bg: #1d2638;
+    --hero-track: #2f3a52;
+
+    --c1: #e8ecf2;
+    --c2: #7c9bff;
+    --c3: #5575e0;
+    --c4: #3f58b0;
+    --c5: #2e4180;
+    --c6: #24325f;
   }
 }
