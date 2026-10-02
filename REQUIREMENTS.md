@@ -6,7 +6,7 @@ Personal expense tracker for one user, installed on a phone as a PWA.
 - Platform: PWA (React + Vite), hosted on GitHub Pages
 - Currency: BDT (৳)
 - Data: stored on the phone (IndexedDB), manual JSON export/import for backup
-  - Open: cloud sync (Supabase) deferred; revisit later if wanted
+  - Decided: phone-only for now; cloud sync (Supabase) deferred and can be added later
 
 ## Functional requirements
 1. **Expenses**: add, edit, delete (amount, category, date, note)
@@ -15,7 +15,8 @@ Personal expense tracker for one user, installed on a phone as a PWA.
    - Deleting a category in use must not lose its expenses (reassign to "Other")
 4. **Budgets**: monthly limit per category; show spent / limit / remaining and flag when over
 5. **Recurring**: define recurring items (e.g. rent, subscriptions) with a frequency
-   (monthly, weekly); entries are generated automatically when due
+   (monthly, weekly); entries are generated automatically when due (on app open and on save).
+   A start date in the past back-fills the missed entries. Month-end dates clamp (31st → 28th/29th/30th) without drifting.
 6. **Search and filters**: by text (note), category, date range
 7. **Monthly summary**: total spent, income, balance, per-category breakdown
 8. **Backup**: export and import JSON
