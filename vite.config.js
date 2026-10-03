@@ -11,6 +11,8 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Fonts are bundled (no CDN). Precache only the Latin subsets the app needs, so it looks the same offline.
+      workbox: { globPatterns: ['**/*.{js,css,html,png,svg}', '**/*-latin-wght-normal-*.woff2'] },
       includeAssets: ['icon-192.png', 'icon-512.png'],
       manifest: {
         name: 'Expense Tracker',
@@ -18,8 +20,8 @@ export default defineConfig({
         start_url: base,
         scope: base,
         display: 'standalone',
-        background_color: '#f8fafc',
-        theme_color: '#0f766e',
+        background_color: '#f4f4f1',
+        theme_color: '#f4f4f1',
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },

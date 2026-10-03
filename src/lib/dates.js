@@ -30,3 +30,40 @@ export function dayLabel(iso) {
   const [y, m, d] = parse(iso)
   return new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
 }
+
+export function daysInMonth(month) {
+  const [y, m] = month.split('-').map(Number)
+  return new Date(y, m, 0).getDate()
+}
+
+export const monthEnd = (month) => `${month}-${String(daysInMonth(month)).padStart(2, '0')}`
+
+// 0 = Monday ... 6 = Sunday
+export function weekdayIndex(iso) {
+  const [y, m, d] = parse(iso)
+  return (new Date(y, m - 1, d).getDay() + 6) % 7
+}
+
+export function daysBetween(fromISO, toISO) {
+  const [fy, fm, fd] = parse(fromISO)
+  const [ty, tm, td] = parse(toISO)
+  return Math.round((new Date(ty, tm - 1, td) - new Date(fy, fm - 1, fd)) / 86400000)
+}
+
+const SHORT = { weekday: 'short', day: 'numeric', month: 'short' }
+export function shortDay(iso) {
+  const [y, m, d] = parse(iso)
+  return new Date(y, m - 1, d).toLocaleDateString('en-GB', SHORT).replace(',', '')
+}
+
+// "Today · Sun 18 Oct", "Yesterday · Sat 17 Oct", else "Fri 16 Oct".
+export function relativeDay(iso, todayISO = today()) {
+  const diff = daysBetween(iso, todayISO)
+  const label = shortDay(iso)
+  return diff === 0 ? `Today · ${label}` : diff === 1 ? `Yesterday · ${label}` : label
+}
+
+export function monthName(month) {
+  const [y, m] = parse(month)
+  return new Date(y, m - 1, 1).toLocaleDateString('en-GB', { month: 'long' })
+}

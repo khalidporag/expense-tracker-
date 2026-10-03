@@ -1,5 +1,5 @@
 import Dexie from 'dexie'
-import { defaultCategories } from './seed.js'
+import { defaultCategories, normalizeIcon } from './seed.js'
 
 export const db = new Dexie('expense-tracker')
 
@@ -35,6 +35,16 @@ db
 
 // v3: drop the prototype table.
 db.version(3).stores({ expenses: null })
+
+// v4: category icons are drawn-icon keys instead of emoji.
+db
+  .version(4)
+  .stores({})
+  .upgrade((tx) =>
+    tx.table('categories').toCollection().modify((c) => {
+      c.icon = normalizeIcon(c.icon)
+    }),
+  )
 
 // Fresh installs (no upgrade path) get the default categories here.
 db.on('populate', (tx) => tx.table('categories').bulkAdd(defaultCategories()))

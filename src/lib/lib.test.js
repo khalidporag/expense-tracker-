@@ -88,3 +88,36 @@ describe('summary', () => {
     expect(g.map((x) => [x.date, x.items.length])).toEqual([['2026-10-02', 2], ['2026-10-01', 1]])
   })
 })
+
+import { CATEGORY_ICON_KEYS, defaultCategories, normalizeIcon } from '../db/seed.js'
+import { ICON_PATHS } from '../components/iconPaths.js'
+
+describe('category icons', () => {
+  it('every icon key has a drawing, and so does every seeded category', () => {
+    for (const k of CATEGORY_ICON_KEYS) expect(ICON_PATHS[k], k).toBeTruthy()
+    for (const c of defaultCategories()) expect(CATEGORY_ICON_KEYS).toContain(c.icon)
+  })
+  it('maps earlier emoji and unknown values to keys', () => {
+    expect(normalizeIcon('🍽️')).toBe('food')
+    expect(normalizeIcon('💰')).toBe('coins')
+    expect(normalizeIcon('🦄')).toBe('tag')
+    expect(normalizeIcon('bills')).toBe('bills')
+  })
+})
+
+import { normalizeTheme, resolveTheme } from './theme.js'
+
+describe('theme preference', () => {
+  it('only accepts light, dark or system', () => {
+    expect(normalizeTheme('dark')).toBe('dark')
+    expect(normalizeTheme('light')).toBe('light')
+    expect(normalizeTheme('sepia')).toBe('system')
+    expect(normalizeTheme(null)).toBe('system')
+  })
+  it('system follows the phone; explicit choices ignore it', () => {
+    expect(resolveTheme('system', true)).toBe('dark')
+    expect(resolveTheme('system', false)).toBe('light')
+    expect(resolveTheme('light', true)).toBe('light')
+    expect(resolveTheme('dark', false)).toBe('dark')
+  })
+})

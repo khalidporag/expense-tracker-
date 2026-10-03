@@ -1,66 +1,82 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Empty, Segmented, TxRow } from '../components/Bits.jsx'
+import Icon from '../components/Icon.jsx'
+import { Empty, Stat, TxRow } from '../components/Bits.jsx'
 import { useCategories } from '../hooks/useCategories.js'
 import { newestFirst } from '../hooks/useMonth.js'
 import { db } from '../db/index.js'
 import { filterTransactions, groupByDate, summarize } from '../lib/summary.js'
-import { dayLabel } from '../lib/dates.js'
+import { relativeDay } from '../lib/dates.js'
 import { formatMoney } from '../lib/money.js'
 
 const NO_FILTERS = { text: '', type: '', categoryId: null, from: '', to: '' }
+const PAGE = 60
 
-export default function History({ onEdit }) {
+// `preset` ({categoryId, from, to, nonce}) comes from "See entries" links elsewhere in the app.
+export default function History({ onEdit, preset }) {
   const all = useLiveQuery(async () => (await db.transactions.toArray()).sort(newestFirst))
   const { list, byId } = useCategories()
   const [f, setF] = useState(NO_FILTERS)
-  const [open, setOpen] = useState(false)
-  const set = (patch) => setF({ ...f, ...patch })
+  const [datesOpen, setDatesOpen] = useState(false)
+  const [limit, setLimit] = useState(PAGE)
+  const set = (patch) => { setF({ ...f, ...patch }); setLimit(PAGE) }
+
+  useEffect(() => {
+    if (!preset) return
+    setF({ ...NO_FILTERS, categoryId: preset.categoryId ?? null, from: preset.from || '', to: preset.to || '' })
+    setDatesOpen(!!(preset.from || preset.to))
+    setLimit(PAGE)
+  }, [preset?.nonce])
 
   const shown = filterTransactions(all || [], f)
   const sum = summarize(shown)
-  const active = f.type || f.categoryId != null || f.from || f.to
+  const page = shown.slice(0, limit)
+  const hasDates = f.from || f.to
 
   return (
-    <>
-      <div className="search">
-        <input type="search" placeholder="Search notes" aria-label="Search notes" value={f.text}
-          onChange={(e) => set({ text: e.target.value })} />
-        <button className={active ? 'icon-btn on' : 'icon-btn'} onClick={() => setOpen(!open)} aria-label="Filters" aria-expanded={open}>⚙︎</button>
-      </div>
+    <div className="stack tight">
+      <h1 className="title">History</h1>
+      <label className="search">
+        <Icon name="search" />
+        <input type="search" placeholder="Search notes" aria-label="Search notes" value={f.text} onChange={(e) => set({ text: e.target.value })} />
+      </label>
 
-      {open && (
-        <section className="card form">
-          <Segmented value={f.type} onChange={(type) => set({ type, categoryId: null })}
-            options={[{ value: '', label: 'All' }, { value: 'expense', label: 'Expense' }, { value: 'income', label: 'Income' }]} />
-          <select aria-label="Category" value={f.categoryId ?? ''} onChange={(e) => set({ categoryId: e.target.value === '' ? null : Number(e.target.value) })}>
-            <option value="">All categories</option>
-            {list.filter((c) => !f.type || c.kind === f.type).map((c) => (
-              <option key={c.id} value={c.id}>{c.icon} {c.name}{!f.type ? ` (${c.kind})` : ''}</option>
-            ))}
-          </select>
-          <div className="row">
-            <input type="date" aria-label="From date" value={f.from} onChange={(e) => set({ from: e.target.value })} />
-            <input type="date" aria-label="To date" value={f.to} onChange={(e) => set({ to: e.target.value })} />
-          </div>
-          <button className="ghost" onClick={() => setF(NO_FILTERS)}>Clear filters</button>
-        </section>
+      <div className="chips scroll" role="group" aria-label="Filters">
+        {[['', 'All'], ['expense', 'Expenses'], ['income', 'Income']].map(([v, label]) => (
+          <button key={label} className={f.type === v ? 'chip on' : 'chip'} aria-pressed={f.type === v} onClick={() => set({ type: v, categoryId: null })}>{label}</button>
+        ))}
+        <select className={f.categoryId != null ? 'chip on' : 'chip'} aria-label="Category" value={f.categoryId ?? ''} onChange={(e) => set({ categoryId: e.target.value === '' ? null : Number(e.target.value) })}>
+          <option value="">Category</option>
+          {list.filter((c) => !f.type || c.kind === f.type).map((c) => <option key={c.id} value={c.id}>{c.name}{!f.type ? ` (${c.kind})` : ''}</option>)}
+        </select>
+        <button className={hasDates ? 'chip on' : 'chip'} aria-expanded={datesOpen} onClick={() => setDatesOpen((o) => !o)}>Dates<Icon name="chevD" size={16} stroke={2} /></button>
+      </div>
+      {datesOpen && (
+        <div className="dates-panel">
+          <input type="date" aria-label="From date" value={f.from} onChange={(e) => set({ from: e.target.value })} />
+          <input type="date" aria-label="To date" value={f.to} onChange={(e) => set({ to: e.target.value })} />
+        </div>
       )}
 
       {all && (
-        <p className="muted center">
-          {shown.length} {shown.length === 1 ? 'entry' : 'entries'} · spent {formatMoney(sum.expense)} · income {formatMoney(sum.income)}
-        </p>
-      )}
-      {all && shown.length === 0 && <Empty icon="🔍">Nothing matches.</Empty>}
-      {groupByDate(shown).map((g) => (
-        <section key={g.date}>
-          <div className="day">{dayLabel(g.date)}</div>
-          <ul className="list">
-            {g.items.map((t) => <TxRow key={t.id} tx={t} category={byId.get(t.categoryId)} onClick={() => onEdit(t)} />)}
-          </ul>
+        <section className="trio" aria-label="Totals for these entries">
+          <Stat label="Entries">{shown.length}</Stat>
+          <Stat label="Spent">{formatMoney(sum.expense)}</Stat>
+          <Stat label="Income"><span className="pos">{formatMoney(sum.income)}</span></Stat>
         </section>
-      ))}
-    </>
+      )}
+      {all && shown.length === 0 && <Empty icon="search">Nothing matches.</Empty>}
+
+      {groupByDate(page).map((g) => {
+        const net = g.items.reduce((s, t) => s + (t.type === 'income' ? t.amount : -t.amount), 0)
+        return (
+          <section key={g.date} aria-label={relativeDay(g.date)}>
+            <div className="day-head"><h2 style={{ font: 'inherit', margin: 0 }}>{relativeDay(g.date)}</h2><span className={net > 0 ? 'pos' : ''}>{net > 0 ? '+' : net < 0 ? '−' : ''}{formatMoney(Math.abs(net))}</span></div>
+            <ul className="list">{g.items.map((t) => <TxRow key={t.id} tx={t} category={byId.get(t.categoryId)} onClick={() => onEdit(t)} />)}</ul>
+          </section>
+        )
+      })}
+      {shown.length > limit && <button className="btn block" onClick={() => setLimit(limit + PAGE)}>Load older entries</button>}
+    </div>
   )
 }

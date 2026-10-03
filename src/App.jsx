@@ -3,6 +3,7 @@ import BottomNav from './components/BottomNav.jsx'
 import TransactionForm from './forms/TransactionForm.jsx'
 import Home from './screens/Home.jsx'
 import History from './screens/History.jsx'
+import Insights from './screens/Insights.jsx'
 import Budgets from './screens/Budgets.jsx'
 import More from './screens/More.jsx'
 import { runRecurring } from './db/actions.js'
@@ -12,22 +13,31 @@ export default function App() {
   const [tab, setTab] = useState('home')
   const [month, setMonth] = useState(currentMonth())
   const [editing, setEditing] = useState(null) // transaction | 'new'
+  const [historyPreset, setHistoryPreset] = useState(null)
+  const [moreView, setMoreView] = useState(null)
 
   // Create any recurring entries that came due since the app was last opened.
   useEffect(() => { runRecurring() }, [])
 
-  const common = { onEdit: setEditing, onGo: setTab }
+  // Navigate between tabs; `opts` carries a History filter or a Settings sub-view.
+  const go = (to, opts = {}) => {
+    if (to === 'history') setHistoryPreset(opts.from || opts.categoryId != null ? { ...opts, nonce: Date.now() } : null)
+    if (to === 'more') setMoreView(opts.view || null)
+    setTab(to)
+    window.scrollTo(0, 0)
+  }
+
   return (
-    <div className="app">
-      <main>
-        {tab === 'home' && <Home month={month} onMonth={setMonth} {...common} />}
-        {tab === 'history' && <History onEdit={setEditing} />}
+    <>
+      <main className="app">
+        {tab === 'home' && <Home month={month} onMonth={setMonth} onEdit={setEditing} go={go} />}
+        {tab === 'history' && <History onEdit={setEditing} preset={historyPreset} />}
+        {tab === 'insights' && <Insights month={month} onMonth={setMonth} go={go} />}
         {tab === 'budgets' && <Budgets month={month} onMonth={setMonth} />}
-        {tab === 'more' && <More />}
+        {tab === 'more' && <More key={moreView || 'root'} initialView={moreView} onBack={() => go('home')} />}
       </main>
-      {tab !== 'more' && <button className="fab" onClick={() => setEditing('new')} aria-label="Add entry">+</button>}
-      <BottomNav tab={tab} onChange={setTab} />
+      <BottomNav tab={tab} onChange={go} onAdd={() => setEditing('new')} />
       {editing && <TransactionForm initial={editing === 'new' ? undefined : editing} onClose={() => setEditing(null)} />}
-    </div>
+    </>
   )
 }
