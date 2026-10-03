@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import Sheet from '../components/Sheet.jsx'
 import Icon from '../components/Icon.jsx'
 import { Segmented } from '../components/Bits.jsx'
+import SubcategoryEditor from '../components/SubcategoryEditor.jsx'
 import { db } from '../db/index.js'
 import { saveCategory, deleteCategory } from '../db/actions.js'
 import { CATEGORY_ICON_KEYS, normalizeIcon } from '../db/seed.js'
@@ -49,6 +50,8 @@ export default function CategoryForm({ initial, onClose }) {
         </div>
         {initial?.system && <p className="muted small">"Other" can be renamed but not deleted. It receives entries from deleted categories.</p>}
       </form>
+      {initial?.kind === 'expense' && <SubcategoryEditor category={initial} />}
+      {!initial && kind === 'expense' && <p className="muted small">After saving, open this category again to add subcategories (for example Electricity and Gas under Utility bills).</p>}
     </Sheet>
   )
 }

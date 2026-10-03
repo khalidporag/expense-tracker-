@@ -241,7 +241,7 @@ function Weekdays({ d }) {
 }
 
 function Biggest({ d }) {
-  const { txs, byId } = d
+  const { txs, byId, subById } = d
   const { top, share } = topEntries(txs, 4)
   if (top.length === 0) return null
   return (
@@ -253,8 +253,8 @@ function Biggest({ d }) {
           <div key={tx.id} className="line-row" style={{ gridTemplateColumns: '28px minmax(0,1fr) auto', minHeight: 56 }}>
             <span className="fig muted" style={{ fontSize: 18 }}>{i + 1}</span>
             <div>
-              <div style={{ fontWeight: 600 }}>{tx.note || byId.get(tx.categoryId)?.name}</div>
-              <div className="muted small">{byId.get(tx.categoryId)?.name} · {shortDay(tx.date)}{tx.recurringId ? ' · recurring' : ''}</div>
+              <div style={{ fontWeight: 600 }}>{tx.note || subById.get(tx.subcategoryId)?.name || byId.get(tx.categoryId)?.name}</div>
+              <div className="muted small">{byId.get(tx.categoryId)?.name}{subById.get(tx.subcategoryId) ? ` › ${subById.get(tx.subcategoryId).name}` : ''} · {shortDay(tx.date)}{tx.recurringId ? ' · recurring' : ''}</div>
             </div>
             <div style={{ textAlign: 'right' }}><div style={{ fontWeight: 700 }}>{formatMoney(tx.amount)}</div><div className="muted small">{Math.round(s * 100)}%</div></div>
           </div>

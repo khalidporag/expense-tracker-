@@ -35,23 +35,27 @@ export function cumulativeSeries(txs, throughDay) {
 
 export const spentThroughDay = (txs, day) => expenses(txs).filter((t) => DAY(t.date) <= day).reduce((s, t) => s + t.amount, 0)
 
-// Per-category change vs the previous month over the same days. Biggest swings first.
-export function categoryDeltas(curTxs, prevTxs, throughDay) {
+// Change vs the previous month over the same days, grouped by `keyFn(tx)`. Biggest swings first.
+export function groupDeltas(curTxs, prevTxs, throughDay, keyFn) {
   const cur = new Map()
   const prev = new Map()
-  for (const t of expenses(curTxs)) cur.set(t.categoryId, (cur.get(t.categoryId) || 0) + t.amount)
+  for (const t of expenses(curTxs)) cur.set(keyFn(t), (cur.get(keyFn(t)) || 0) + t.amount)
   for (const t of expenses(prevTxs)) {
-    if (DAY(t.date) <= throughDay) prev.set(t.categoryId, (prev.get(t.categoryId) || 0) + t.amount)
+    if (DAY(t.date) <= throughDay) prev.set(keyFn(t), (prev.get(keyFn(t)) || 0) + t.amount)
   }
-  const ids = new Set([...cur.keys(), ...prev.keys()])
-  return [...ids]
-    .map((categoryId) => {
-      const c = cur.get(categoryId) || 0
-      const p = prev.get(categoryId) || 0
-      return { categoryId, cur: c, prev: p, delta: c - p, pct: p > 0 ? Math.round(((c - p) / p) * 100) : null }
+  const keys = new Set([...cur.keys(), ...prev.keys()])
+  return [...keys]
+    .map((key) => {
+      const c = cur.get(key) || 0
+      const p = prev.get(key) || 0
+      return { key, cur: c, prev: p, delta: c - p, pct: p > 0 ? Math.round(((c - p) / p) * 100) : null }
     })
     .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
 }
+
+// Per-category change vs the previous month over the same days.
+export const categoryDeltas = (curTxs, prevTxs, throughDay) =>
+  groupDeltas(curTxs, prevTxs, throughDay, (t) => t.categoryId).map(({ key, ...r }) => ({ categoryId: key, ...r }))
 
 // Average expense per weekday (Mon..Sun) over the days elapsed so far.
 export function weekdayAverages(txs, month, throughDay) {

@@ -36,6 +36,7 @@
 .chips.wrap { flex-wrap: wrap; }
 .chip { flex: none; min-height: 40px; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: 20px; background: var(--surface); color: var(--ink); font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
 .chip.on { background: var(--btn-bg); color: var(--btn-fg); border-color: var(--btn-bg); }
+.chip.dashed { border-style: dashed; background: transparent; color: var(--muted); }
 .chip.soft { background: var(--blue-tint); color: var(--blue-ink); border-color: transparent; min-height: 34px; font-size: 13px; }
 select.chip { width: auto; appearance: none; padding-right: 14px; }
 
@@ -53,8 +54,9 @@ select.chip { width: auto; appearance: none; padding-right: 14px; }
 .row-card strong { font-weight: 600; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .day-head { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 2px 6px; font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
 .divided > * { border-bottom: 1px solid var(--soft); }
-.divided > *:last-child { border-bottom: 0; }
+.divided > *:last-child, .divided > .line-row.tap:last-child { border-bottom: 0; }
 .line-row { display: grid; align-items: center; column-gap: 12px; min-height: 54px; }
+.line-row.tap { width: 100%; background: none; border: 0 solid var(--soft); border-bottom-width: 1px; padding: 0; color: inherit; text-align: left; font: inherit; }
 
 /* ---------- progress ---------- */
 .progress { position: relative; height: 12px; border-radius: 6px; background: var(--track); }

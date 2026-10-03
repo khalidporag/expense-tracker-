@@ -22,16 +22,17 @@ export const Pill = ({ tone = 'info', icon, size, children }) => (
   <span className={`pill ${tone}${size ? ` ${size}` : ''}`}>{icon && <Icon name={icon} size={14} stroke={2.2} />}{children}</span>
 )
 
-export function TxRow({ tx, category, showDate, onClick }) {
+export function TxRow({ tx, category, sub, showDate, onClick }) {
   const income = tx.type === 'income'
-  const sub = [category?.name || 'Other', showDate ? relativeDay(tx.date) : null].filter(Boolean).join(' · ')
+  const catLabel = `${category?.name || 'Other'}${sub ? ` › ${sub.name}` : ''}`
+  const subLine = [catLabel, showDate ? relativeDay(tx.date) : null].filter(Boolean).join(' · ')
   return (
     <li>
       <button className="row-card" onClick={onClick}>
         <CategoryIcon category={category} tone={income ? 'pos' : ''} />
         <span className="grow">
-          <strong>{tx.note || category?.name || 'Other'}</strong>
-          <span className="muted small">{sub}{tx.recurringId ? ' · recurring' : ''}</span>
+          <strong>{tx.note || sub?.name || category?.name || 'Other'}</strong>
+          <span className="muted small">{subLine}{tx.recurringId ? ' · recurring' : ''}</span>
         </span>
         <span className={income ? 'amt in' : 'amt'}>{income ? '+' : '−'}{formatMoney(tx.amount)}</span>
       </button>

@@ -121,3 +121,39 @@ describe('theme preference', () => {
     expect(resolveTheme('dark', false)).toBe('dark')
   })
 })
+
+import { subBreakdown, monthSeries, subKey } from './subcategories.js'
+import { groupDeltas } from './insights.js'
+
+describe('subcategories', () => {
+  const subs = [{ id: 1, name: 'Electricity' }, { id: 2, name: 'Gas' }]
+  const e = (id, date, amount, subcategoryId) => ({ id, type: 'expense', categoryId: 3, date, amount, ...(subcategoryId ? { subcategoryId } : {}) })
+
+  it('splits a category by subcategory, biggest first, "Not assigned" last', () => {
+    const { total, rows } = subBreakdown([e(1, '2026-10-02', 180000, 1), e(2, '2026-10-03', 90000, 2), e(3, '2026-10-04', 20000, 1), e(4, '2026-10-05', 500000)], subs)
+    expect(total).toBe(790000)
+    expect(rows.map((r) => [r.name, r.amount, r.count])).toEqual([['Electricity', 200000, 2], ['Gas', 90000, 1], ['Not assigned', 500000, 1]])
+    expect(rows[0].share).toBeCloseTo(200000 / 790000)
+  })
+  it('treats a deleted subcategory as not assigned', () => {
+    expect(subKey({ subcategoryId: 99 }, new Set([1, 2]))).toBeNull()
+    expect(subBreakdown([e(1, '2026-10-02', 100, 99)], subs).rows[0].name).toBe('Not assigned')
+  })
+  it('builds a month-by-month series for one subcategory, all, or unassigned', () => {
+    const txs = [e(1, '2026-08-10', 100, 1), e(2, '2026-09-10', 300, 1), e(3, '2026-09-11', 50, 2), e(4, '2026-10-01', 70)]
+    const months = ['2026-08', '2026-09', '2026-10']
+    expect(monthSeries(txs, months, 1, subs).map((m) => m.amount)).toEqual([100, 300, 0])
+    expect(monthSeries(txs, months, 'all', subs).map((m) => m.amount)).toEqual([100, 350, 70])
+    expect(monthSeries(txs, months, 'none', subs).map((m) => m.amount)).toEqual([0, 0, 70])
+  })
+  it('compares subcategories with last month over the same days', () => {
+    const key = (t) => subKey(t, new Set([1, 2]))
+    const d = groupDeltas([e(1, '2026-10-02', 200, 1)], [e(2, '2026-09-02', 100, 1), e(3, '2026-09-25', 900, 1)], 18, key)
+    expect(d[0]).toEqual({ key: 1, cur: 200, prev: 100, delta: 100, pct: 100 })
+  })
+  it('filters transactions by subcategory', () => {
+    const txs = [e(1, '2026-10-02', 1, 1), e(2, '2026-10-02', 1, 2), e(3, '2026-10-02', 1)]
+    expect(filterTransactions(txs, { categoryId: 3, subcategoryId: 1 }).map((t) => t.id)).toEqual([1])
+    expect(filterTransactions(txs, { categoryId: 3 })).toHaveLength(3)
+  })
+})

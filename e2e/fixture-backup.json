@@ -1,6 +1,6 @@
 {
  "format": "expense-tracker-backup",
- "version": 2,
+ "version": 3,
  "exportedAt": "2026-10-18T12:00:00.000Z",
  "categories": [
   {
@@ -72,6 +72,28 @@
    "system": true
   }
  ],
+ "subcategories": [
+  {
+   "id": 1,
+   "categoryId": 3,
+   "name": "Rent"
+  },
+  {
+   "id": 2,
+   "categoryId": 3,
+   "name": "Phone"
+  },
+  {
+   "id": 3,
+   "categoryId": 3,
+   "name": "Electricity"
+  },
+  {
+   "id": 4,
+   "categoryId": 3,
+   "name": "Gas"
+  }
+ ],
  "transactions": [
   {
    "id": 1,
@@ -89,7 +111,8 @@
    "amount": 520000,
    "categoryId": 3,
    "note": "Rent",
-   "recurringId": 1
+   "recurringId": 1,
+   "subcategoryId": 1
   },
   {
    "id": 3,
@@ -209,7 +232,8 @@
    "date": "2026-10-14",
    "amount": 40000,
    "categoryId": 3,
-   "note": "Phone bill"
+   "note": "Phone bill",
+   "subcategoryId": 2
   },
   {
    "id": 18,
@@ -282,7 +306,8 @@
    "amount": 500000,
    "categoryId": 3,
    "note": "Rent",
-   "recurringId": 1
+   "recurringId": 1,
+   "subcategoryId": 1
   },
   {
    "id": 27,
@@ -314,7 +339,8 @@
    "date": "2026-09-09",
    "amount": 90000,
    "categoryId": 3,
-   "note": "Bill"
+   "note": "Bill",
+   "subcategoryId": 3
   },
   {
    "id": 31,
@@ -402,7 +428,8 @@
    "date": "2026-09-28",
    "amount": 310000,
    "categoryId": 3,
-   "note": "Bills"
+   "note": "Bills",
+   "subcategoryId": 4
   },
   {
    "id": 42,
@@ -451,6 +478,7 @@
    "type": "expense",
    "amount": 520000,
    "categoryId": 3,
+   "subcategoryId": 1,
    "note": "Rent",
    "frequency": "monthly",
    "startDate": "2026-10-01",

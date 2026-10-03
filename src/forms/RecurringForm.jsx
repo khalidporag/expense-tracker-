@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import Sheet from '../components/Sheet.jsx'
 import { Segmented, CategoryChips } from '../components/Bits.jsx'
+import SubcategoryPicker from '../components/SubcategoryPicker.jsx'
 import { useCategories } from '../hooks/useCategories.js'
 import { saveRecurring, deleteRecurring } from '../db/actions.js'
 import { toMinor, toInput } from '../lib/money.js'
@@ -11,6 +12,7 @@ export default function RecurringForm({ initial, onClose }) {
   const [type, setType] = useState(initial?.type || 'expense')
   const [amount, setAmount] = useState(initial ? toInput(initial.amount) : '')
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? null)
+  const [subId, setSubId] = useState(initial?.subcategoryId ?? null)
   const [note, setNote] = useState(initial?.note || '')
   const [frequency, setFrequency] = useState(initial?.frequency || 'monthly')
   const [startDate, setStartDate] = useState(initial?.startDate || today())
@@ -24,7 +26,10 @@ export default function RecurringForm({ initial, onClose }) {
   const submit = async (e) => {
     e.preventDefault()
     if (!valid) return
-    await saveRecurring({ ...initial, type, amount: minor, categoryId: chosen, note: note.trim(), frequency, startDate, active })
+    const rule = { ...initial, type, amount: minor, categoryId: chosen, note: note.trim(), frequency, startDate, active }
+    if (type === 'expense' && subId != null) rule.subcategoryId = subId
+    else delete rule.subcategoryId
+    await saveRecurring(rule)
     onClose()
   }
   const remove = async () => {
@@ -37,11 +42,12 @@ export default function RecurringForm({ initial, onClose }) {
   return (
     <Sheet title={initial ? 'Edit recurring' : 'New recurring'} onClose={onClose}>
       <form className="form" onSubmit={submit}>
-        <Segmented label="Entry type" value={type} onChange={setType}
+        <Segmented label="Entry type" value={type} onChange={(v) => { setType(v); setSubId(null) }}
           options={[{ value: 'expense', label: 'Expense' }, { value: 'income', label: 'Income' }]} />
         <input autoFocus className="field big-input" type="number" inputMode="decimal" step="0.01" min="0" placeholder="৳ 0"
           aria-label="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
-        <CategoryChips categories={cats} value={chosen} onChange={setCategoryId} />
+        <CategoryChips categories={cats} value={chosen} onChange={(id) => { setCategoryId(id); setSubId(null) }} />
+        {type === 'expense' && chosen != null && <SubcategoryPicker categoryId={chosen} value={subId} onChange={setSubId} />}
         <input className="field" type="text" placeholder="Note, e.g. Rent" aria-label="Note" value={note} onChange={(e) => setNote(e.target.value)} />
         <Segmented label="Frequency" value={frequency} onChange={setFrequency}
           options={[{ value: 'monthly', label: 'Monthly' }, { value: 'weekly', label: 'Weekly' }]} />

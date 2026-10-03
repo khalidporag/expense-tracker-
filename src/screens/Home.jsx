@@ -126,7 +126,7 @@ function Actions({ d, go }) {
   )
 }
 
-function Breakdown({ d, go }) {
+function Breakdown({ d, go, onDetail }) {
   const { summary, rows, txs, prevTxs, info, byId } = d
   const deltas = new Map(categoryDeltas(txs, prevTxs, info.isFuture ? 1 : Math.max(info.day, 1)).map((x) => [x.categoryId, x]))
   const state = new Map(rows.map((r) => [r.categoryId, r]))
@@ -154,7 +154,7 @@ function Breakdown({ d, go }) {
               const r = state.get(s.id)
               const sub = r ? `${Math.round(r.ratio * 100)}% of budget` : ''
               return (
-                <div key={s.id} className="line-row" style={{ gridTemplateColumns: '12px minmax(0,1fr) auto' }}>
+                <button key={s.id} className="line-row tap" style={{ gridTemplateColumns: '12px minmax(0,1fr) auto' }} onClick={() => onDetail(s.id)} aria-label={`${byId.get(s.id)?.name || 'Other'} in detail`}>
                   <span className="swatch" style={{ background: s.color }} />
                   <div>
                     <div style={{ fontWeight: 600 }}>{byId.get(s.id)?.name || 'Other'}</div>
@@ -169,7 +169,7 @@ function Breakdown({ d, go }) {
                     )}
                     {dl && dl.pct == null && dl.cur > 0 && <div className="small muted">new</div>}
                   </div>
-                </div>
+                </button>
               )
             })}
             {restAmount > 0 && (
@@ -187,10 +187,10 @@ function Breakdown({ d, go }) {
   )
 }
 
-export default function Home({ month, onMonth, onEdit, go }) {
+export default function Home({ month, onMonth, onEdit, onDetail, go }) {
   const d = useMonthData(month)
   if (!d.ready) return null
-  const { summary, txs, byId, month: m } = d
+  const { summary, txs, byId, subById, month: m } = d
   return (
     <div className="stack">
       <div className="page-head">
@@ -204,7 +204,7 @@ export default function Home({ month, onMonth, onEdit, go }) {
         <Stat label="Kept">{formatMoney(summary.balance)}</Stat>
       </section>
       <Actions d={d} go={go} />
-      <Breakdown d={d} go={go} />
+      <Breakdown d={d} go={go} onDetail={onDetail} />
       <section className="stack tight" aria-label="Recent entries">
         <div className="section-head">
           <h2 className="h2">Recent</h2>
@@ -212,7 +212,7 @@ export default function Home({ month, onMonth, onEdit, go }) {
         </div>
         {txs.length === 0 && <Empty icon="plus">No entries this month. Tap + to add one.</Empty>}
         <ul className="list">
-          {txs.slice(0, 5).map((t) => <TxRow key={t.id} tx={t} category={byId.get(t.categoryId)} showDate onClick={() => onEdit(t)} />)}
+          {txs.slice(0, 5).map((t) => <TxRow key={t.id} tx={t} category={byId.get(t.categoryId)} sub={subById.get(t.subcategoryId)} showDate onClick={() => onEdit(t)} />)}
         </ul>
       </section>
     </div>

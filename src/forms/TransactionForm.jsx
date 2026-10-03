@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import Sheet from '../components/Sheet.jsx'
 import Icon from '../components/Icon.jsx'
 import { Segmented, CategoryChips } from '../components/Bits.jsx'
+import SubcategoryPicker from '../components/SubcategoryPicker.jsx'
 import { useCategories } from '../hooks/useCategories.js'
 import { db } from '../db/index.js'
 import { saveTransaction, deleteTransaction } from '../db/actions.js'
@@ -55,6 +56,7 @@ export default function TransactionForm({ initial, onClose }) {
   const [type, setType] = useState(initial?.type || 'expense')
   const [amount, setAmount] = useState(initial ? toInput(initial.amount) : '')
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? null)
+  const [subId, setSubId] = useState(initial?.subcategoryId ?? null)
   const [date, setDate] = useState(initial?.date || today())
   const [note, setNote] = useState(initial?.note || '')
   const [noteOpen, setNoteOpen] = useState(!!initial?.note)
@@ -107,12 +109,16 @@ export default function TransactionForm({ initial, onClose }) {
   const apply = (t) => {
     setAmount(toInput(t.amount))
     setCategoryId(t.categoryId)
+    setSubId(t.subcategoryId ?? null)
     setNote(t.note || '')
     setNoteOpen(!!t.note)
   }
   const save = async () => {
     if (!valid) return
-    await saveTransaction({ ...initial, type, amount: minor, categoryId: chosen, date, note: note.trim() })
+    const data = { ...initial, type, amount: minor, categoryId: chosen, date, note: note.trim() }
+    if (type === 'expense' && subId != null) data.subcategoryId = subId
+    else delete data.subcategoryId
+    await saveTransaction(data)
     onClose()
   }
   const remove = async () => {
@@ -123,7 +129,7 @@ export default function TransactionForm({ initial, onClose }) {
   }
 
   const header = (
-    <Segmented label="Entry type" value={type} onChange={setType}
+    <Segmented label="Entry type" value={type} onChange={(v) => { setType(v); setSubId(null) }}
       options={[{ value: 'expense', label: 'Expense' }, { value: 'income', label: 'Income' }]} />
   )
   const catById = new Map(list.map((c) => [c.id, c]))
@@ -143,7 +149,8 @@ export default function TransactionForm({ initial, onClose }) {
         </div>
       )}
 
-      <CategoryChips categories={cats} value={chosen} onChange={setCategoryId} />
+      <CategoryChips categories={cats} value={chosen} onChange={(id) => { setCategoryId(id); setSubId(null) }} />
+      {type === 'expense' && chosen != null && <SubcategoryPicker categoryId={chosen} value={subId} onChange={setSubId} />}
 
       {repeats.length > 0 && (
         <div className="repeat">

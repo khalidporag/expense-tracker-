@@ -13,7 +13,7 @@ The selected month is shared by Home, Insights and Budgets. "See entries" links 
 1. **Hero** (current month, budgets set): *Safe to spend today* = (budget − spent) / days left; progress bar with a "today's pace" marker; one status line (points ahead/under pace, forecast over/under budget) that opens Insights. Without budgets: spent so far + prompt to set budgets. Past months: spent vs budget summary.
 2. **Totals**: Income · Spent · Kept.
 3. **Do this next** (current month): up to 4 ranked cards — over budget (with the ~daily amount that fits), running low (per-day left + last month's figure), upcoming recurring (next 7 days), or "set budgets". Over-budget cards offer *Move budget* when another category can cover it.
-4. **Where it went**: stacked share bar + rows with budget % and ▲/▼ change vs the same days last month.
+4. **Where it went**: stacked share bar + rows with budget % and ▲/▼ change vs the same days last month. Tap a row to open **category detail**.
 5. **Recent**: last 5 entries.
 
 ### Insights
@@ -23,13 +23,16 @@ Forecast card (projection chart vs last month and budget, comparison chips) · *
 Summary (left of total, pace marker, per-day available, forecast) · cards per budget with status pill (Over by / left / On track), pace marker and per-day left · suggestion to move unused budget onto an overage · categories without a budget as chips.
 
 ### History
-Search notes · filter chips (All/Expenses/Income, Category, Dates) · totals for the filtered set · entries grouped by day with the day's net · "Load older entries" (60 at a time).
+Search notes · filter chips (All/Expenses/Income, Category, Subcategory once a category with subcategories is chosen, Dates) · totals for the filtered set · entries grouped by day with the day's net · "Load older entries" (60 at a time).
+
+### Category detail (sheet)
+Opened from a Home breakdown row. Month total with change vs last month (same days), then the category split by **subcategory** (amount, entries, share bar, ▲/▼ vs last month; entries without one are "Not assigned"), a 6-month trend bar chart for All or one subcategory, **See entries** (History filtered to it) and **Manage**. A category with no subcategories shows a prompt to add some.
 
 ### More
-Settings: **Appearance** (System / Light / Dark) → Categories (icon picker), Recurring, Backup & restore.
+Settings: **Appearance** (System / Light / Dark) → Categories (icon picker; expense categories also manage their subcategories: add, rename, delete), Recurring, Backup & restore.
 
 ## Add / edit entry (sheet)
-Expense/Income toggle → large amount with a **built-in keypad** (no system keyboard; physical digits and Backspace also work) → live **budget impact** line ("Food would be ৳2,950 over budget…") → categories ranked by recent use → *Repeat* chips from recent entries → date (relative label, native picker) and optional note → Save (states the amount). Edit adds Delete. Save is disabled until amount > 0.
+Expense/Income toggle → large amount with a **built-in keypad** (no system keyboard; physical digits and Backspace also work) → live **budget impact** line ("Food would be ৳2,950 over budget…") → categories ranked by recent use → optional **subcategory** chips for expenses (with inline *New*; tap again to clear) → *Repeat* chips from recent entries → date (relative label, native picker) and optional note → Save (states the amount). Edit adds Delete. Save is disabled until amount > 0.
 
 ## Visual rules
 - Money shows as `৳1,234` (poisha only when non-zero); allowances and forecasts are rounded to whole taka.

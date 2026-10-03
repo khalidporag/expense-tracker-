@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/index.js'
 import { newestFirst } from './useMonth.js'
 import { useCategories } from './useCategories.js'
+import { useSubcategories } from './useSubcategories.js'
 import { today, shiftMonth } from '../lib/dates.js'
 import { monthInfo } from '../lib/insights.js'
 import { summarize, budgetStatus } from '../lib/summary.js'
@@ -17,7 +18,8 @@ export function useMonthData(month) {
   const budgets = useLiveQuery(() => db.budgets.toArray())
   const rules = useLiveQuery(() => db.recurring.toArray())
   const cats = useCategories()
-  const ready = !!(txs && prevTxs && budgets && rules && cats.ready)
+  const subs = useSubcategories()
+  const ready = !!(txs && prevTxs && budgets && rules && cats.ready && subs.ready)
   if (!ready) return { ready: false }
 
   const todayISO = today()
@@ -40,7 +42,7 @@ export function useMonthData(month) {
   }
 
   return {
-    ready, month, prevMonth, todayISO, info, txs, prevTxs, budgets, rules, cats: cats.list, byId: cats.byId,
+    ready, month, prevMonth, todayISO, info, txs, prevTxs, budgets, rules, cats: cats.list, byId: cats.byId, subById: subs.byId, subsByCategory: subs.byCategory,
     summary, rows, hasBudget, totals, scopeTxs, prevScopeTxs, prevScopeTotal: sum(prevScopeTxs), prevAllTotal: sum(prevTxs),
     unbudgeted: summary.expense - (hasBudget ? totals.spent : 0),
   }
