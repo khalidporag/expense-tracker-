@@ -22,7 +22,8 @@ Personal expense tracker for one user, installed on a phone as a PWA.
 7. **Monthly summary**: total spent, income, kept, per-category breakdown with change vs last month
 8. **Daily allowance**: safe-to-spend per day from budgets, with pace and month-end forecast
 9. **Insights & actions**: ranked "do this next" cards, forecast chart, what-if cap calculator, savings rate, weekday pattern, biggest entries, budget move suggestions
-10. **Backup**: export and import JSON
+10. **Backup**: export and import JSON (includes savings data)
+11. **Savings**: a monthly savings goal (fixed amount or % of income); savings plans — DPS (monthly installments), Sanchay Patra / fixed deposit (one deposit, profit monthly/quarterly/at maturity) and savings goals — with maturity estimates after source tax (user-entered rates), recorded deposits, status (due / overdue / matured), a Savings tab view, a month-by-month history and a monthly finance report (earned, spent by category, budget, saved vs goal). Deposits are savings, not expenses.
 
 ## Non-functional requirements
 - Mobile-first, usable one-handed; fast add flow (amount first)

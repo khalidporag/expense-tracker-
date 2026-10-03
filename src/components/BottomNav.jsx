@@ -7,7 +7,7 @@ const LEFT = [
 ]
 const RIGHT = [
   { id: 'insights', label: 'Insights', icon: 'chart' },
-  { id: 'budgets', label: 'Budgets', icon: 'target' },
+  { id: 'budgets', label: 'Plan', icon: 'target' },
 ]
 
 export default function BottomNav({ tab, onChange, onAdd }) {

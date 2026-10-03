@@ -1,6 +1,6 @@
 {
  "format": "expense-tracker-backup",
- "version": 3,
+ "version": 4,
  "exportedAt": "2026-10-18T12:00:00.000Z",
  "categories": [
   {
@@ -301,6 +301,14 @@
   },
   {
    "id": 26,
+   "type": "income",
+   "date": "2026-09-01",
+   "amount": 6200000,
+   "categoryId": 8,
+   "note": "September salary"
+  },
+  {
+   "id": 27,
    "type": "expense",
    "date": "2026-09-01",
    "amount": 500000,
@@ -310,7 +318,7 @@
    "subcategoryId": 1
   },
   {
-   "id": 27,
+   "id": 28,
    "type": "expense",
    "date": "2026-09-03",
    "amount": 300000,
@@ -318,7 +326,7 @@
    "note": "Groceries"
   },
   {
-   "id": 28,
+   "id": 29,
    "type": "expense",
    "date": "2026-09-04",
    "amount": 200000,
@@ -326,7 +334,7 @@
    "note": "Ride share"
   },
   {
-   "id": 29,
+   "id": 30,
    "type": "expense",
    "date": "2026-09-07",
    "amount": 300000,
@@ -334,7 +342,7 @@
    "note": "Dinner"
   },
   {
-   "id": 30,
+   "id": 31,
    "type": "expense",
    "date": "2026-09-09",
    "amount": 90000,
@@ -343,7 +351,7 @@
    "subcategoryId": 3
   },
   {
-   "id": 31,
+   "id": 32,
    "type": "expense",
    "date": "2026-09-10",
    "amount": 170000,
@@ -351,7 +359,7 @@
    "note": "Clothes"
   },
   {
-   "id": 32,
+   "id": 33,
    "type": "expense",
    "date": "2026-09-11",
    "amount": 300000,
@@ -359,7 +367,7 @@
    "note": "Groceries"
   },
   {
-   "id": 33,
+   "id": 34,
    "type": "expense",
    "date": "2026-09-12",
    "amount": 210000,
@@ -367,7 +375,7 @@
    "note": "Fuel"
   },
   {
-   "id": 34,
+   "id": 35,
    "type": "expense",
    "date": "2026-09-14",
    "amount": 90000,
@@ -375,7 +383,7 @@
    "note": "Medicine"
   },
   {
-   "id": 35,
+   "id": 36,
    "type": "expense",
    "date": "2026-09-15",
    "amount": 300000,
@@ -383,7 +391,7 @@
    "note": "Dinner"
   },
   {
-   "id": 36,
+   "id": 37,
    "type": "expense",
    "date": "2026-09-16",
    "amount": 30000,
@@ -391,7 +399,7 @@
    "note": "Snacks"
   },
   {
-   "id": 37,
+   "id": 38,
    "type": "expense",
    "date": "2026-09-22",
    "amount": 600000,
@@ -399,7 +407,7 @@
    "note": "Groceries"
   },
   {
-   "id": 38,
+   "id": 39,
    "type": "expense",
    "date": "2026-09-25",
    "amount": 200000,
@@ -407,7 +415,7 @@
    "note": "Fuel"
   },
   {
-   "id": 39,
+   "id": 40,
    "type": "expense",
    "date": "2026-09-26",
    "amount": 430000,
@@ -415,7 +423,7 @@
    "note": "Shoes"
   },
   {
-   "id": 40,
+   "id": 41,
    "type": "expense",
    "date": "2026-09-27",
    "amount": 60000,
@@ -423,7 +431,7 @@
    "note": "Checkup"
   },
   {
-   "id": 41,
+   "id": 42,
    "type": "expense",
    "date": "2026-09-28",
    "amount": 310000,
@@ -432,7 +440,7 @@
    "subcategoryId": 4
   },
   {
-   "id": 42,
+   "id": 43,
    "type": "expense",
    "date": "2026-09-29",
    "amount": 40000,
@@ -506,6 +514,150 @@
    "startDate": "2026-10-01",
    "lastGenerated": "2026-10-01",
    "active": true
+  }
+ ],
+ "plans": [
+  {
+   "id": 1,
+   "kind": "dps",
+   "name": "City Bank DPS",
+   "startDate": "2026-01-10",
+   "termMonths": 36,
+   "rateBp": 950,
+   "taxBp": 1000,
+   "installment": 500000,
+   "active": true
+  },
+  {
+   "id": 2,
+   "kind": "lump",
+   "name": "Paribar Sanchay Patra",
+   "startDate": "2025-12-01",
+   "termMonths": 60,
+   "rateBp": 1128,
+   "taxBp": 1000,
+   "principal": 20000000,
+   "payout": "monthly",
+   "active": true
+  },
+  {
+   "id": 3,
+   "kind": "goal",
+   "name": "Emergency fund",
+   "startDate": "2026-06-01",
+   "termMonths": 24,
+   "rateBp": 0,
+   "taxBp": 0,
+   "target": 12000000,
+   "installment": 500000,
+   "active": true
+  }
+ ],
+ "deposits": [
+  {
+   "id": 1,
+   "planId": 1,
+   "date": "2026-01-10",
+   "amount": 500000
+  },
+  {
+   "id": 2,
+   "planId": 1,
+   "date": "2026-02-10",
+   "amount": 500000
+  },
+  {
+   "id": 3,
+   "planId": 1,
+   "date": "2026-03-10",
+   "amount": 500000
+  },
+  {
+   "id": 4,
+   "planId": 1,
+   "date": "2026-04-10",
+   "amount": 500000
+  },
+  {
+   "id": 5,
+   "planId": 1,
+   "date": "2026-05-10",
+   "amount": 500000
+  },
+  {
+   "id": 6,
+   "planId": 1,
+   "date": "2026-06-10",
+   "amount": 500000
+  },
+  {
+   "id": 7,
+   "planId": 1,
+   "date": "2026-07-10",
+   "amount": 500000
+  },
+  {
+   "id": 8,
+   "planId": 1,
+   "date": "2026-08-10",
+   "amount": 500000
+  },
+  {
+   "id": 9,
+   "planId": 1,
+   "date": "2026-09-10",
+   "amount": 500000
+  },
+  {
+   "id": 10,
+   "planId": 1,
+   "date": "2026-10-10",
+   "amount": 500000
+  },
+  {
+   "id": 11,
+   "planId": 2,
+   "date": "2025-12-01",
+   "amount": 20000000
+  },
+  {
+   "id": 12,
+   "planId": 3,
+   "date": "2026-06-05",
+   "amount": 500000
+  },
+  {
+   "id": 13,
+   "planId": 3,
+   "date": "2026-07-05",
+   "amount": 500000
+  },
+  {
+   "id": 14,
+   "planId": 3,
+   "date": "2026-08-05",
+   "amount": 500000
+  },
+  {
+   "id": 15,
+   "planId": 3,
+   "date": "2026-09-05",
+   "amount": 500000
+  },
+  {
+   "id": 16,
+   "planId": 3,
+   "date": "2026-10-05",
+   "amount": 300000
+  }
+ ],
+ "settings": [
+  {
+   "key": "savingsTarget",
+   "value": {
+    "mode": "amount",
+    "amount": 1000000
+   }
   }
  ]
 }

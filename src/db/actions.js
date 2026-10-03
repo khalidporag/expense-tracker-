@@ -63,6 +63,29 @@ export async function moveBudget(fromId, toId, amount) {
   })
 }
 
+// ---- savings ----
+export const setSetting = (key, value) => db.settings.put({ key, value })
+export const clearSetting = (key) => db.settings.delete(key)
+
+export async function savePlan(plan) {
+  if (plan.id) {
+    await db.plans.put(plan)
+    return plan.id
+  }
+  return db.plans.add({ active: true, ...plan })
+}
+
+// Deleting a plan deletes its recorded deposits too (they only make sense under the plan).
+export async function deletePlan(id) {
+  await db.transaction('rw', db.plans, db.deposits, async () => {
+    await db.deposits.where('planId').equals(id).delete()
+    await db.plans.delete(id)
+  })
+}
+
+export const addDeposit = (deposit) => db.deposits.add(deposit)
+export const deleteDeposit = (id) => db.deposits.delete(id)
+
 // ---- recurring ----
 export async function saveRecurring(r) {
   await (r.id ? db.recurring.put(r) : db.recurring.add({ ...r, lastGenerated: null }))

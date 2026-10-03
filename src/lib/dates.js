@@ -63,6 +63,12 @@ export function relativeDay(iso, todayISO = today()) {
   return diff === 0 ? `Today · ${label}` : diff === 1 ? `Yesterday · ${label}` : label
 }
 
+// "10 Jan 2029": for dates far enough away that the year matters (plan maturity).
+export function dayYear(iso) {
+  const [y, m, d] = parse(iso)
+  return new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
 export function monthName(month) {
   const [y, m] = parse(month)
   return new Date(y, m - 1, 1).toLocaleDateString('en-GB', { month: 'long' })

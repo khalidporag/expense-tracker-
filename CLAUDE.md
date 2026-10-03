@@ -20,18 +20,18 @@ React 18 · Vite 5 · Dexie (IndexedDB) + dexie-react-hooks · vite-plugin-pwa �
 src/
   main.jsx            entry (imports bundled fonts + styles)
   App.jsx             shell: tab state, selected month, add/edit sheet, `go(tab, opts)` navigation, runs recurring on open
-  screens/            Home, History, Insights, Budgets, More (+ Categories/Recurring/Backup sub-views)
-  forms/              bottom sheets: Transaction (keypad + budget impact), Category (icon picker + subcategories), Budget, Recurring, CategoryDetail (usage by subcategory)
+  screens/            Home, History, Insights, Plan (= Budgets + Savings, segmented), More (+ Categories/Recurring/Backup sub-views)
+  forms/              bottom sheets: Transaction (keypad + budget impact), Category (icon picker + subcategories), Budget, Recurring, CategoryDetail (usage by subcategory), PlanForm / PlanDetail / SavingsTargetForm / MonthReport (savings)
   components/         Sheet, BottomNav (centre + button), MonthNav, Bits (Progress, Pill, TxRow, Segmented, CategoryChips, Stat, Empty),
                       Icon/CategoryIcon + iconPaths.js (drawn icons), LineChart (forecast chart), SubcategoryPicker, SubcategoryEditor,
                       TopBar (search + gear), SearchPalette (smart search), Splash (welcome), ExitDialog, InstallBanner, InstallGuide
-  hooks/              useInstall (InstallProvider: "use it as an app" prompt), useBackHandler + useExitGuard (phone Back button), useCategories, useSubcategories, useMonthTransactions, useMonthData (everything a month screen derives, budget-scoped)
+  hooks/              useSavings, useInstall (InstallProvider: "use it as an app" prompt), useBackHandler + useExitGuard (phone Back button), useCategories, useSubcategories, useMonthTransactions, useMonthData (everything a month screen derives, budget-scoped)
   db/
-    index.js          Dexie schema + versioned migrations (v1..v5)
+    index.js          Dexie schema + versioned migrations (v1..v6)
     seed.js           default categories, icon keys, emoji -> icon normalisation
     actions.js        ALL writes live here (incl. moveBudget, runRecurring)
     backup.js         JSON export/import
-  lib/                PURE logic, no React, no DB, unit-tested: money, dates, recurring, summary, insights, subcategories, search, backStack, splash, install, theme
+  lib/                PURE logic, no React, no DB, unit-tested: money, dates, recurring, summary, insights, subcategories, search, backStack, splash, install, savings, theme
   styles/             tokens.css (light; dark under :root[data-theme='dark']) · base.css · components.css
 e2e/                  smoke.cjs (browser test), fixture-backup.json + make-fixture.cjs (the design's sample month)
 scripts/make-icons.py regenerates public/icon-*.png (pure Python)
@@ -40,11 +40,14 @@ docs/UI.md            screen specs and design rules
 ```
 Rule of thumb: logic that can be pure goes in `lib/` with a test; DB writes go in `db/actions.js`; screens only compose.
 
-## Data model (Dexie, DB name `expense-tracker`, schema v5)
+## Data model (Dexie, DB name `expense-tracker`, schema v6)
 - `transactions`: `{id, type:'expense'|'income', amount, categoryId, subcategoryId?, date, note, recurringId?}`
 - `categories`: `{id, name, kind:'expense'|'income', icon, system?}` — `icon` is a key in `components/iconPaths.js` (never emoji); `system` = the "Other" of each kind
 - `subcategories`: `{id, categoryId, name}` — optional detail under an **expense** category (Utility bills → Electricity, Gas)
 - `budgets`: `{id, categoryId (unique), limit}` — monthly limit, expense categories only
+- `plans`: `{id, kind:'dps'|'lump'|'goal', name, startDate, termMonths, rateBp, taxBp, active, installment (dps/goal), principal+payout:'monthly'|'quarterly'|'maturity' (lump), target (goal)}` — rates in **basis points** (950 = 9.5%/yr)
+- `deposits`: `{id, planId, date, amount, note?}` — money actually put into a plan. **Savings, never expenses.**
+- `settings`: `{key, value}` — `savingsTarget`: `{mode:'amount', amount}` or `{mode:'percent', percent}`
 - `recurring`: `{id, type, amount, categoryId, subcategoryId?, note, frequency:'monthly'|'weekly', startDate, lastGenerated, active}`
 
 ## Conventions that must not be broken
@@ -68,7 +71,9 @@ Rule of thumb: logic that can be pure goes in `lib/` with a test; DB writes go i
 18. **Search is a registry of items in `SearchPalette.buildItems`.** A new screen, setting or action must be added there with plain-language `keywords` (synonyms are what make it smart). Ranking lives in `lib/search.js` (typo-tolerant, every word must match). Search and the Settings gear live together in `TopBar`, always at the top, same height.
 19. **Welcome splash** shows once per browsing session (`lib/splash.js`); automated browsers skip it (`navigator.webdriver`) and `?splash=1` forces it. Don't block data loading on it.
 20. **"Use it as an app" prompt** (`hooks/useInstall.jsx`, `lib/install.js`). Android/desktop Chrome: catch `beforeinstallprompt` at load (it fires once, maybe before React mounts), show our banner, call `prompt()` on tap. **iPhone has no web install API** — show the Share → Add to Home Screen how-to; never claim one-tap on iOS. In-app browsers (Facebook, Instagram, WebViews) cannot install: say to open the link in the real browser, with Copy link. The banner waits for the splash, hides once installed, and snoozes 14 days after "Not now"; Settings and search always keep "Install as an app". Automated browsers don't see the banner unless `?install=1`. The manifest must keep valid `any` and `maskable` icons, `id`, and `start_url`/`scope` under the base path, or browsers stop offering install.
-21. **Deploy base path is `/expense-tracker-/`** (`vite.config.js`). Reference public assets with `%BASE_URL%` in `index.html`, never bare `/`.
+21. **Savings are tracked apart from spending.** A deposit into a plan is *not* an expense and never appears in "Spent", budgets or the spending forecast; "Saved" = the month's deposits, "Kept" = income − expenses, "Left in hand" = kept − saved. `lib/savings.js` holds all the maths (DPS = equal installments at the start of each month, interest compounded quarterly; Sanchay Patra / FDR = monthly or quarterly profit paid out, or compounded to maturity; source tax on the interest). **Never ship default interest rates or assume a tax rate**: they change and cannot be verified, so the user types what the bank or National Savings office quotes (tax is only an editable 10% starting point). Everything is labelled an estimate. Rates are integer basis points. Backups: `plans`, `deposits`, `settings` are optional on import (older files); deposits whose plan is missing are dropped.
+22. **Plan tab = Budgets + Savings.** The tab id stays `budgets` (label "Plan"); `go('savings')` opens it on Savings, `go('budgets')` on Budgets, and tapping the tab bar keeps the last view. New savings facts for "Do this next" go through `savingsSignals` → `buildActions` (deposit due, goal at risk after mid-month, maturing within 60 days).
+23. **Deploy base path is `/expense-tracker-/`** (`vite.config.js`). Reference public assets with `%BASE_URL%` in `index.html`, never bare `/`.
 
 ## Testing expectations
 - New logic in `lib/` → add cases to `src/lib/lib.test.js`.

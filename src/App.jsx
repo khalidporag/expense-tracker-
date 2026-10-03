@@ -9,7 +9,8 @@ import CategoryDetail from './forms/CategoryDetail.jsx'
 import Home from './screens/Home.jsx'
 import History from './screens/History.jsx'
 import Insights from './screens/Insights.jsx'
-import Budgets from './screens/Budgets.jsx'
+import Plan from './screens/Plan.jsx'
+import MonthReport from './forms/MonthReport.jsx'
 import More from './screens/More.jsx'
 import { runRecurring } from './db/actions.js'
 import { useBackHandler } from './hooks/useBackHandler.js'
@@ -36,6 +37,8 @@ export default function App() {
   const [editing, setEditing] = useState(null) // transaction | 'new' | 'new-income'
   const [detail, setDetail] = useState(null) // category id whose detail sheet is open
   const [searchOpen, setSearchOpen] = useState(false)
+  const [planView, setPlanView] = useState('budgets') // 'budgets' | 'savings' inside the Plan tab
+  const [reportMonth, setReportMonth] = useState(null)
   const [historyPreset, setHistoryPreset] = useState(null)
   const [moreView, setMoreView] = useState(null)
   const exitGuard = useExitGuard()
@@ -48,7 +51,10 @@ export default function App() {
   const go = useCallback((to, opts = {}) => {
     if (to === 'history') setHistoryPreset(opts.from || opts.categoryId != null || opts.subcategoryId != null || opts.text ? { ...opts, nonce: ++presetCount.current } : null)
     if (to === 'more') setMoreView(opts.view || null)
-    setTab(to)
+    // Budgets and Savings share the Plan tab: 'savings' opens it on Savings, 'budgets' on Budgets (unless the tab bar was tapped).
+    if (to === 'savings') setPlanView('savings')
+    if (to === 'budgets' && !opts.keepView) setPlanView('budgets')
+    setTab(to === 'savings' ? 'budgets' : to)
     window.scrollTo(0, 0)
     if (opts.section) setTimeout(() => scrollToSection(opts.section), 80)
   }, [])
@@ -62,7 +68,7 @@ export default function App() {
     return true
   })
 
-  const searchCtx = useMemo(() => ({ go, openAdd: (type) => setEditing(type === 'income' ? 'new-income' : 'new'), openDetail: setDetail }), [go])
+  const searchCtx = useMemo(() => ({ go, openAdd: (type) => setEditing(type === 'income' ? 'new-income' : 'new'), openDetail: setDetail, openReport: () => setReportMonth(currentMonth()) }), [go])
   const closeSplash = useCallback(() => { markSplashSeen(); setSplash(false) }, [])
 
   return (
@@ -72,14 +78,15 @@ export default function App() {
         {tab === 'home' && <Home month={month} onMonth={setMonth} onEdit={setEditing} onDetail={setDetail} go={go} />}
         {tab === 'history' && <History onEdit={setEditing} preset={historyPreset} />}
         {tab === 'insights' && <Insights month={month} onMonth={setMonth} go={go} />}
-        {tab === 'budgets' && <Budgets month={month} onMonth={setMonth} />}
+        {tab === 'budgets' && <Plan month={month} onMonth={setMonth} view={planView} onView={setPlanView} onReport={setReportMonth} />}
         {tab === 'more' && <More key={moreView || 'root'} initialView={moreView} onBack={() => go('home')} />}
       </main>
-      <BottomNav tab={tab} onChange={go} onAdd={() => setEditing('new')} />
+      <BottomNav tab={tab} onChange={(id) => go(id, id === 'budgets' ? { keepView: true } : {})} onAdd={() => setEditing('new')} />
       {detail != null && <CategoryDetail categoryId={detail} month={month} go={go} onClose={() => setDetail(null)} />}
       {editing && (
         <TransactionForm initial={typeof editing === 'object' ? editing : undefined} defaultType={editing === 'new-income' ? 'income' : undefined} onClose={() => setEditing(null)} />
       )}
+      {reportMonth && <MonthReport month={reportMonth} go={go} onClose={() => setReportMonth(null)} />}
       {searchOpen && <SearchPalette ctx={searchCtx} onClose={() => setSearchOpen(false)} />}
       {exitGuard.asking && <ExitDialog onStay={exitGuard.stay} onExit={exitGuard.exit} />}
       {exitGuard.hint && <div className="toast" role="status">Press Back once more to exit.</div>}
