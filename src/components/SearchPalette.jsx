@@ -5,6 +5,7 @@ import { useCategories } from '../hooks/useCategories.js'
 import { useSubcategories } from '../hooks/useSubcategories.js'
 import { searchItems } from '../lib/search.js'
 import { setThemePref } from '../lib/theme.js'
+import { useInstall } from '../hooks/useInstall.jsx'
 
 const RECENT_KEY = 'expense-tracker-search-recent'
 const readRecent = () => { try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || [] } catch { return [] } }
@@ -58,11 +59,16 @@ function buildItems({ cats, subs, ctx }) {
 export default function SearchPalette({ ctx, onClose }) {
   const { list: cats } = useCategories()
   const { list: subs } = useSubcategories()
+  const { canInstall, install } = useInstall()
   const [q, setQ] = useState('')
   const [active, setActive] = useState(0)
   useBackHandler(() => { onClose(); return true })
 
-  const items = useMemo(() => buildItems({ cats, subs, ctx }), [cats, subs, ctx])
+  const items = useMemo(() => {
+    const all = buildItems({ cats, subs, ctx })
+    if (canInstall) all.push({ id: 'install', title: 'Install as an app', group: 'Settings', icon: 'phone', keywords: ['app', 'home screen', 'add to home screen', 'download app', 'pwa', 'shortcut', 'install'], run: install })
+    return all
+  }, [cats, subs, ctx, canInstall, install])
   const byId = useMemo(() => new Map(items.map((i) => [i.id, i])), [items])
   const query = q.trim()
 

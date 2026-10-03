@@ -504,6 +504,109 @@ const ok = (c, m) => { if (c) console.log('✓', m); else { console.log('✗ FAI
   ok(left || bp.isClosed() || bp.url() === 'about:blank', `back: confirming Exit leaves the app (or, if the browser refuses, says to press Back once more) [url=${bp.isClosed() ? 'closed' : bp.url()}]`)
   await bctx.close()
 
+  // --- "use it as an app": one-tap on Android, how-to on iPhone, help inside in-app browsers ---
+  const UA = {
+    android: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36',
+    iphone: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+    facebook: 'Mozilla/5.0 (Linux; Android 14; Pixel 8; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/126.0.0.0 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/450.0.0.0;]',
+  }
+  const mkUA = (ua, extra = {}) => browser.newContext({ viewport: { width: 390, height: 800 }, isMobile: true, hasTouch: true, userAgent: ua, ...extra })
+  const fireInstallEvent = (pg, outcome) => pg.evaluate((o) => {
+    window.__log = []
+    const e = new Event('beforeinstallprompt')
+    e.prompt = () => { window.__log.push('prompt'); return Promise.resolve() }
+    e.userChoice = Promise.resolve({ outcome: o })
+    window.dispatchEvent(e)
+  }, outcome)
+
+  // Android: a real one-tap prompt
+  let ictx = await mkUA(UA.android)
+  let ip = await ictx.newPage()
+  await ip.goto(`${URL}?install=1`)
+  await ip.waitForSelector('.hero')
+  await ip.waitForTimeout(2800)
+  ok((await ip.locator('.install-banner').count()) === 0, 'install (Android): nothing is shown while the browser offers no install prompt')
+  await fireInstallEvent(ip, 'accepted')
+  await ip.waitForSelector('.install-banner', { timeout: 5000 })
+  const bannerText = await ip.innerText('.install-banner')
+  ok(/Install Expenses/.test(bannerText) && /One tap/.test(bannerText), `install (Android): banner offers one-tap install (${bannerText.replace(/\n+/g, ' | ')})`)
+  const bb = await ip.locator('.install-banner').boundingBox()
+  const nb = await ip.locator('.nav').boundingBox()
+  ok(bb.y + bb.height <= nb.y && bb.x >= 0 && bb.x + bb.width <= 390, 'install: the banner sits above the tab bar and inside the screen')
+  ok((await ip.evaluate(() => document.documentElement.scrollWidth <= innerWidth)), 'install: the banner causes no horizontal overflow')
+  await ip.screenshot({ path: `${S}/install-banner.png` })
+  await ip.click('.install-banner button:has-text("Install")')
+  await ip.waitForSelector('.install-banner', { state: 'detached' })
+  ok((await ip.evaluate(() => window.__log)).includes('prompt'), 'install (Android): tapping Install opens the browser\'s own install prompt')
+  await ip.evaluate(() => window.dispatchEvent(new Event('appinstalled')))
+  await ip.click('button[aria-label^="Settings"]')
+  await ip.waitForSelector('text=Installed as an app')
+  ok(true, 'install: Settings says "Installed as an app" once installed')
+  await ictx.close()
+
+  // Android: dismissing hides it for two weeks, but Settings and search still offer it
+  ictx = await mkUA(UA.android)
+  ip = await ictx.newPage()
+  await ip.goto(`${URL}?install=1`)
+  await ip.waitForSelector('.hero')
+  await fireInstallEvent(ip, 'accepted')
+  await ip.waitForSelector('.install-banner', { timeout: 5000 })
+  await ip.click('.install-banner button[aria-label="Not now"]')
+  await ip.waitForSelector('.install-banner', { state: 'detached' })
+  await ip.reload()
+  await ip.waitForSelector('.hero')
+  await fireInstallEvent(ip, 'accepted')
+  await ip.waitForTimeout(3000)
+  ok((await ip.locator('.install-banner').count()) === 0, 'install: after "Not now" the banner stays away on the next visit')
+  await ip.click('button[aria-label="Search the app"]')
+  await ip.fill('.palette input', 'home screen')
+  ok(/Install as an app/.test(await ip.locator('.palette [role=option]').first().innerText()), 'install: search finds "Install as an app" ("home screen")')
+  await ip.press('.palette input', 'Escape')
+  await ip.click('button[aria-label^="Settings"]')
+  await ip.click('.row-card:has-text("Install as an app")')
+  await ip.waitForFunction(() => (window.__log || []).includes('prompt'))
+  ok(true, 'install: Settings > Install as an app still opens the prompt')
+  await ictx.close()
+
+  // iPhone: Apple offers no install button to websites, so show the three taps
+  ictx = await mkUA(UA.iphone)
+  ip = await ictx.newPage()
+  await ip.goto(`${URL}?install=1`)
+  await ip.waitForSelector('.install-banner', { timeout: 6000 })
+  ok(/Use Expenses as an app/.test(await ip.innerText('.install-banner')) && /Show me how/.test(await ip.innerText('.install-banner')), 'install (iPhone): banner appears on its own and offers the how-to')
+  await ip.click('.install-banner button:has-text("Show me how")')
+  await ip.waitForSelector('.sheet')
+  const guide = await ip.innerText('.sheet')
+  ok(/Add Expenses to your Home Screen/.test(guide) && /Share/.test(guide) && /Add to Home Screen/.test(guide) && /Add\b/.test(guide), 'install (iPhone): the sheet shows Share -> Add to Home Screen -> Add')
+  await ip.screenshot({ path: `${S}/install-guide-ios.png` })
+  await ip.click('.sheet button:has-text("Got it")')
+  await ip.waitForSelector('.sheet', { state: 'detached' })
+  await ictx.close()
+
+  // iPhone, already installed to the Home Screen: no banner
+  ictx = await mkUA(UA.iphone)
+  await ictx.addInitScript(() => Object.defineProperty(navigator, 'standalone', { get: () => true }))
+  ip = await ictx.newPage()
+  await ip.goto(`${URL}?install=1`)
+  await ip.waitForSelector('.hero')
+  await ip.waitForTimeout(3000)
+  ok((await ip.locator('.install-banner').count()) === 0, 'install (iPhone): no banner once running from the Home Screen')
+  await ictx.close()
+
+  // Facebook / Messenger in-app browser: cannot install, so explain how to open the page properly
+  ictx = await mkUA(UA.facebook, { permissions: ['clipboard-read', 'clipboard-write'] })
+  ip = await ictx.newPage()
+  await ip.goto(`${URL}?install=1`)
+  await ip.waitForSelector('.install-banner', { timeout: 6000 })
+  ok(/Open in your browser to install/.test(await ip.innerText('.install-banner')), 'install (in-app browser): banner says to open it in the real browser')
+  await ip.click('.install-banner button:has-text("How")')
+  await ip.waitForSelector('.sheet')
+  ok(/Open in browser/.test(await ip.innerText('.sheet')) && /expense-tracker-/.test(await ip.innerText('.sheet')), 'install (in-app browser): the sheet explains the steps and shows the link')
+  await ip.click('.sheet button:has-text("Copy link")')
+  await ip.waitForSelector('.sheet button:has-text("Link copied")', { timeout: 3000 })
+  ok(true, 'install (in-app browser): Copy link works')
+  await ictx.close()
+
   // --- dark mode ---
   const dark = await browser.newContext({ viewport: { width: 390, height: 800 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, colorScheme: 'dark' })
   await dark.clock.setFixedTime(new Date(2026, 9, 18, 12, 0, 0))

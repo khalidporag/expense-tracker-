@@ -14,6 +14,7 @@ import More from './screens/More.jsx'
 import { runRecurring } from './db/actions.js'
 import { useBackHandler } from './hooks/useBackHandler.js'
 import { useExitGuard } from './hooks/useExitGuard.js'
+import { InstallProvider } from './hooks/useInstall.jsx'
 import { currentMonth } from './lib/dates.js'
 import { shouldShowSplash } from './lib/splash.js'
 
@@ -65,7 +66,7 @@ export default function App() {
   const closeSplash = useCallback(() => { markSplashSeen(); setSplash(false) }, [])
 
   return (
-    <>
+    <InstallProvider>
       <main className="app">
         <TopBar onSearch={() => setSearchOpen(true)} onSettings={() => go('more')} settingsActive={tab === 'more'} />
         {tab === 'home' && <Home month={month} onMonth={setMonth} onEdit={setEditing} onDetail={setDetail} go={go} />}
@@ -83,6 +84,6 @@ export default function App() {
       {exitGuard.asking && <ExitDialog onStay={exitGuard.stay} onExit={exitGuard.exit} />}
       {exitGuard.hint && <div className="toast" role="status">Press Back once more to exit.</div>}
       {splash && <Splash onDone={closeSplash} />}
-    </>
+    </InstallProvider>
   )
 }

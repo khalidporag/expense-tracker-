@@ -7,6 +7,9 @@ The original design canvas ("Expense Tracker Redesign") is the visual reference;
 ## Opening the app
 A short **welcome splash** (logo, name, time-of-day greeting) shows when the app is opened, once per session; tap to skip.
 
+## Use it as an app
+On first visits in a browser a slim banner above the tab bar offers to install the app (after the splash). **Android / desktop Chrome:** *Install* opens the browser's own one-tap install prompt. **iPhone/iPad:** Apple gives websites no install button, so *Show me how* opens a three-step sheet (Share → Add to Home Screen → Add). **In-app browsers** (Facebook, Messenger, Instagram…) can't install, so the banner explains how to open the page in Chrome/Safari and offers *Copy link*. *Not now* hides the banner for two weeks; **Settings → Install as an app** (and search) always offer it. Nothing shows once the app is installed (Settings then says *Installed as an app*).
+
 ## Navigation
 **Top bar** on every screen: a search field and the Settings gear on one row, same height. Tapping the field opens the **search panel**: type to find any screen, setting, action, category or subcategory (typo-tolerant, understands synonyms such as *export*, *night*, *subscription*), or search your entries by text; arrow keys + Enter also work. "Dark theme" etc. act immediately.
 
