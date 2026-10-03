@@ -46,5 +46,11 @@ db
     }),
   )
 
+// v5: subcategories (an optional label under an expense category) and an index on transactions.subcategoryId.
+db.version(5).stores({
+  subcategories: '++id, categoryId',
+  transactions: '++id, type, date, categoryId, subcategoryId, recurringId',
+})
+
 // Fresh installs (no upgrade path) get the default categories here.
 db.on('populate', (tx) => tx.table('categories').bulkAdd(defaultCategories()))

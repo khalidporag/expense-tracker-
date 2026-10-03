@@ -25,13 +25,14 @@ export function budgetStatus(budgets, monthTxs) {
   })
 }
 
-export function filterTransactions(txs, { text = '', type = '', categoryId = null, from = '', to = '' } = {}) {
+export function filterTransactions(txs, { text = '', type = '', categoryId = null, subcategoryId = null, from = '', to = '' } = {}) {
   const q = text.trim().toLowerCase()
   return txs.filter(
     (t) =>
       (!q || (t.note || '').toLowerCase().includes(q)) &&
       (!type || t.type === type) &&
       (categoryId == null || t.categoryId === categoryId) &&
+      (subcategoryId == null || t.subcategoryId === subcategoryId) &&
       (!from || t.date >= from) &&
       (!to || t.date <= to),
   )

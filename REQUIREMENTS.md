@@ -13,6 +13,7 @@ Personal expense tracker for one user, installed on a phone as a PWA.
 2. **Income**: add, edit, delete; monthly balance = income - expenses
 3. **Categories**: user can add, rename, delete (default set provided)
    - Deleting a category in use must not lose its expenses (reassign to "Other")
+   - **Subcategories** (expense only): optional detail under a category, e.g. Utility bills → Electricity, Gas. Entries keep their category; budgets stay on the category. Category detail shows usage per subcategory with a 6-month trend.
 4. **Budgets**: monthly limit per category; show spent / limit / remaining and flag when over
 5. **Recurring**: define recurring items (e.g. rent, subscriptions) with a frequency
    (monthly, weekly); entries are generated automatically when due (on app open and on save).

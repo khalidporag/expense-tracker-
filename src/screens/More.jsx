@@ -5,6 +5,7 @@ import { Empty, Segmented } from '../components/Bits.jsx'
 import CategoryForm from '../forms/CategoryForm.jsx'
 import RecurringForm from '../forms/RecurringForm.jsx'
 import { useCategories } from '../hooks/useCategories.js'
+import { useSubcategories } from '../hooks/useSubcategories.js'
 import { db } from '../db/index.js'
 import { exportBackup, importBackup } from '../db/backup.js'
 import { nextDue } from '../lib/recurring.js'
@@ -21,6 +22,7 @@ const Back = ({ onClick, children }) => (
 
 function Categories({ onBack }) {
   const { list } = useCategories()
+  const { byCategory } = useSubcategories()
   const [editing, setEditing] = useState(null) // category | 'new'
   return (
     <div className="stack tight">
@@ -33,7 +35,7 @@ function Categories({ onBack }) {
             {list.filter((c) => c.kind === kind).map((c) => (
               <li key={c.id}>
                 <button className="row-card" onClick={() => setEditing(c)} aria-label={`Edit ${c.name}`}>
-                  <CategoryIcon category={c} tone={kind === 'income' ? 'pos' : ''} /><strong className="grow">{c.name}</strong><span className="muted small">Edit</span>
+                  <CategoryIcon category={c} tone={kind === 'income' ? 'pos' : ''} /><span className="grow"><strong>{c.name}</strong>{(byCategory.get(c.id) || []).length > 0 && <span className="muted small">{byCategory.get(c.id).map((x) => x.name).join(', ')}</span>}</span><span className="muted small">Edit</span>
                 </button>
               </li>
             ))}
@@ -48,6 +50,7 @@ function Categories({ onBack }) {
 function Recurring({ onBack }) {
   const rules = useLiveQuery(() => db.recurring.toArray()) || []
   const { byId } = useCategories()
+  const { byId: subById } = useSubcategories()
   const [editing, setEditing] = useState(null)
   return (
     <div className="stack tight">
@@ -62,7 +65,7 @@ function Recurring({ onBack }) {
               <button className="row-card" onClick={() => setEditing(r)}>
                 <CategoryIcon category={c} tone={r.type === 'income' ? 'pos' : ''} />
                 <span className="grow">
-                  <strong>{r.note || c?.name}</strong>
+                  <strong>{r.note || subById.get(r.subcategoryId)?.name || c?.name}</strong>
                   <span className="muted small">{r.frequency === 'weekly' ? 'Weekly' : 'Monthly'} · {r.active ? `next ${shortDay(nextDue(r))}` : 'paused'}</span>
                 </span>
                 <span className={r.type === 'income' ? 'amt in' : 'amt'}>{formatMoney(r.amount)}</span>

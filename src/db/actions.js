@@ -9,16 +9,39 @@ export const deleteTransaction = (id) => db.transactions.delete(id)
 // ---- categories ----
 export const saveCategory = (c) => (c.id ? db.categories.put(c) : db.categories.add(c))
 
-// Deleting a category never loses data: its transactions and recurring rules move to "Other".
+// Deleting a category never loses data: its transactions and recurring rules move to "Other"
+// (their subcategory label goes, because it belonged to the deleted category).
 export async function deleteCategory(id) {
-  await db.transaction('rw', db.categories, db.transactions, db.recurring, db.budgets, async () => {
+  await db.transaction('rw', db.categories, db.subcategories, db.transactions, db.recurring, db.budgets, async () => {
     const cat = await db.categories.get(id)
     if (!cat || cat.system) return
     const other = await db.categories.where('kind').equals(cat.kind).filter((c) => c.system).first()
-    await db.transactions.where('categoryId').equals(id).modify({ categoryId: other.id })
-    await db.recurring.filter((r) => r.categoryId === id).modify({ categoryId: other.id })
+    const move = (row) => { row.categoryId = other.id; delete row.subcategoryId }
+    await db.transactions.where('categoryId').equals(id).modify(move)
+    await db.recurring.filter((r) => r.categoryId === id).modify(move)
     await db.budgets.where('categoryId').equals(id).delete()
+    await db.subcategories.where('categoryId').equals(id).delete()
     await db.categories.delete(id)
+  })
+}
+
+// ---- subcategories (optional detail under an expense category; budgets stay on the category) ----
+// Returns the id so callers can select a subcategory they just created.
+export async function saveSubcategory(sub) {
+  if (sub.id) {
+    await db.subcategories.put(sub)
+    return sub.id
+  }
+  return db.subcategories.add(sub)
+}
+
+// Entries keep their category and amount; they just lose the subcategory label.
+export async function deleteSubcategory(id) {
+  await db.transaction('rw', db.subcategories, db.transactions, db.recurring, async () => {
+    const unlabel = (row) => { delete row.subcategoryId }
+    await db.transactions.where('subcategoryId').equals(id).modify(unlabel)
+    await db.recurring.filter((r) => r.subcategoryId === id).modify(unlabel)
+    await db.subcategories.delete(id)
   })
 }
 
@@ -59,6 +82,7 @@ export async function runRecurring(upTo = today()) {
           type: rule.type,
           amount: rule.amount,
           categoryId: rule.categoryId,
+          ...(rule.subcategoryId != null ? { subcategoryId: rule.subcategoryId } : {}),
           date,
           note: rule.note || '',
           recurringId: rule.id,
