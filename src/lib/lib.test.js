@@ -157,3 +157,94 @@ describe('subcategories', () => {
     expect(filterTransactions(txs, { categoryId: 3 })).toHaveLength(3)
   })
 })
+
+import { searchItems, editDistance } from './search.js'
+import { pushBackHandler, runBackHandlers } from './backStack.js'
+import { shouldShowSplash, greeting } from './splash.js'
+
+describe('app search', () => {
+  const items = [
+    { id: 'home', title: 'Home', group: 'Go to', keywords: ['dashboard', 'overview', 'safe to spend'] },
+    { id: 'insights', title: 'Insights', group: 'Go to', keywords: ['analytics', 'forecast', 'trends', 'report'] },
+    { id: 'budgets', title: 'Budgets', group: 'Go to', keywords: ['limits', 'allowance'] },
+    { id: 'settings', title: 'Settings', group: 'Go to', keywords: ['preferences', 'options', 'gear'] },
+    { id: 'backup', title: 'Backup & restore', group: 'Settings', keywords: ['export', 'import', 'download', 'json'] },
+    { id: 'recurring', title: 'Recurring', group: 'Settings', keywords: ['subscription', 'rent', 'salary', 'repeat'] },
+    { id: 'dark', title: 'Dark theme', group: 'Appearance', keywords: ['night', 'dark mode', 'theme'] },
+    { id: 'light', title: 'Light theme', group: 'Appearance', keywords: ['day', 'bright', 'theme'] },
+    { id: 'add-exp', title: 'Add expense', group: 'Actions', keywords: ['new', 'spend', 'pay'] },
+    { id: 'add-inc', title: 'Add income', group: 'Actions', keywords: ['earn', 'salary', 'deposit'] },
+  ]
+  const top = (q) => searchItems(items, q).map((i) => i.id)
+
+  it('matches titles, prefixes and multiple words', () => {
+    expect(top('home')[0]).toBe('home')
+    expect(top('budg')[0]).toBe('budgets')
+    expect(top('add inc')[0]).toBe('add-inc')
+  })
+  it('understands synonyms through keywords', () => {
+    expect(top('export')[0]).toBe('backup')
+    expect(top('forecast')[0]).toBe('insights')
+    expect(top('night')[0]).toBe('dark')
+    expect(top('subscription')[0]).toBe('recurring')
+    expect(top('dashboard')[0]).toBe('home')
+  })
+  it('tolerates typos', () => {
+    expect(top('backap')[0]).toBe('backup')
+    expect(top('insigts')[0]).toBe('insights')
+    expect(top('buget')[0]).toBe('budgets')
+    expect(top('setings')[0]).toBe('settings')
+  })
+  it('requires every word to match, and ignores case and accents', () => {
+    expect(top('dark budgets')).toEqual([])
+    expect(top('DARK')[0]).toBe('dark')
+    expect(top('')).toEqual([])
+  })
+  it('ranks exact matches above keyword matches', () => {
+    expect(top('salary')).toEqual(['recurring', 'add-inc']) // both only via keyword; stable order by title length
+    expect(top('theme')).toEqual(['dark', 'light'])
+  })
+  it('matches a group name when nothing else does', () => {
+    expect(top('appearance').sort()).toEqual(['dark', 'light'])
+  })
+  it('bounded edit distance gives up early', () => {
+    expect(editDistance('backup', 'backap', 1)).toBe(1)
+    expect(editDistance('abc', 'xyzxyz', 2)).toBe(3)
+  })
+})
+
+describe('back button stack', () => {
+  it('lets the newest handler go first and stops at the first that handles it', () => {
+    const calls = []
+    const off1 = pushBackHandler(() => { calls.push('app'); return true })
+    const off2 = pushBackHandler(() => { calls.push('sheet'); return true })
+    expect(runBackHandlers()).toBe(true)
+    expect(calls).toEqual(['sheet'])
+    off2()
+    calls.length = 0
+    expect(runBackHandlers()).toBe(true)
+    expect(calls).toEqual(['app'])
+    off1()
+  })
+  it('passes the press down when a handler declines, and reports when nobody handled it', () => {
+    const calls = []
+    const off1 = pushBackHandler(() => { calls.push('app'); return false })
+    const off2 = pushBackHandler(() => { calls.push('sub'); return false })
+    expect(runBackHandlers()).toBe(false)
+    expect(calls).toEqual(['sub', 'app'])
+    off2(); off1()
+    expect(runBackHandlers()).toBe(false)
+  })
+})
+
+describe('welcome splash', () => {
+  it('shows on a fresh session, not on reload, not in automation, unless forced', () => {
+    expect(shouldShowSplash({})).toBe(true)
+    expect(shouldShowSplash({ seen: true })).toBe(false)
+    expect(shouldShowSplash({ webdriver: true })).toBe(false)
+    expect(shouldShowSplash({ search: '?splash=1', webdriver: true, seen: true })).toBe(true)
+  })
+  it('greets by time of day', () => {
+    expect([5, 11, 12, 17, 18, 23].map(greeting)).toEqual(['Good morning', 'Good morning', 'Good afternoon', 'Good afternoon', 'Good evening', 'Good evening'])
+  })
+})

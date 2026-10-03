@@ -25,7 +25,7 @@ export default function History({ onEdit, preset }) {
 
   useEffect(() => {
     if (!preset) return
-    setF({ ...NO_FILTERS, categoryId: preset.categoryId ?? null, subcategoryId: preset.subcategoryId ?? null, from: preset.from || '', to: preset.to || '' })
+    setF({ ...NO_FILTERS, text: preset.text || '', categoryId: preset.categoryId ?? null, subcategoryId: preset.subcategoryId ?? null, from: preset.from || '', to: preset.to || '' })
     setDatesOpen(!!(preset.from || preset.to))
     setLimit(PAGE)
   }, [preset?.nonce])

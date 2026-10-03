@@ -1,8 +1,10 @@
 import React, { useEffect } from 'react'
 import Icon from './Icon.jsx'
+import { useBackHandler } from '../hooks/useBackHandler.js'
 
 // Bottom sheet modal. Closes on backdrop tap or Escape.
 export default function Sheet({ title, onClose, header, children }) {
+  useBackHandler(() => { onClose(); return true }) // the phone's Back button closes the sheet
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)

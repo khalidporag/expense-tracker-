@@ -90,6 +90,8 @@ function Actions({ d, go }) {
     rules: rules.map((r) => ({ ...r, label: r.note || byId.get(r.categoryId)?.name })),
   }).slice(0, 4)
   const move = suggestMove(rows)
+  // Nothing to say yet (no budgets, nothing spent): the hero above already invites setting budgets.
+  if (actions.length === 0 && rows.length === 0) return null
   const pill = { over: ['over', 'up', 'Over budget'], warn: ['warn', 'info', 'Running low'], upcoming: ['info', 'repeat', 'Coming up'], setup: ['info', 'target', 'Get started'] }
 
   const run = (cta, a) => {
@@ -193,10 +195,7 @@ export default function Home({ month, onMonth, onEdit, onDetail, go }) {
   const { summary, txs, byId, subById, month: m } = d
   return (
     <div className="stack">
-      <div className="page-head">
-        <div style={{ flex: 1 }}><MonthNav month={month} onChange={onMonth} /></div>
-        <button className="icon-btn" onClick={() => go('more')} aria-label="Settings: categories, recurring, backup"><Icon name="sliders" /></button>
-      </div>
+      <MonthNav month={month} onChange={onMonth} />
       <Hero d={d} go={go} />
       <section className="trio" aria-label="Month totals">
         <Stat label="Income"><span className="money-in">{formatMoney(summary.income)}</span></Stat>

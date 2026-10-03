@@ -4,7 +4,14 @@ Mobile-first (design width 390px), single column, max content width 560px. Botto
 Light and dark themes (`styles/tokens.css`). **Settings → Appearance** chooses System (follows the phone, live), Light or Dark; the choice is saved on the device and applied before first paint. Visual direction: warm-neutral ground, near-black hero card, blue = healthy / orange = needs attention, Bricolage Grotesque for figures and headings, Figtree for text.
 The original design canvas ("Expense Tracker Redesign") is the visual reference; this file is the behavioural spec.
 
+## Opening the app
+A short **welcome splash** (logo, name, time-of-day greeting) shows when the app is opened, once per session; tap to skip.
+
 ## Navigation
+**Top bar** on every screen: a search field and the Settings gear on one row, same height. Tapping the field opens the **search panel**: type to find any screen, setting, action, category or subcategory (typo-tolerant, understands synonyms such as *export*, *night*, *subscription*), or search your entries by text; arrow keys + Enter also work. "Dark theme" etc. act immediately.
+
+**Back button:** closes the topmost thing first (sheet, search panel, a Settings sub-page), then returns to Home from other tabs, and only on Home asks *Exit Expenses?* (Stay / Exit).
+
 Tabs: **Home · History · [+] · Insights · Budgets**. **+** opens the New entry sheet from anywhere. Settings (categories, recurring, backup) opens from the sliders button on Home.
 The selected month is shared by Home, Insights and Budgets. "See entries" links open History pre-filtered (category + month range).
 
@@ -29,7 +36,9 @@ Search notes · filter chips (All/Expenses/Income, Category, Subcategory once a 
 Opened from a Home breakdown row. Month total with change vs last month (same days), then the category split by **subcategory** (amount, entries, share bar, ▲/▼ vs last month; entries without one are "Not assigned"), a 6-month trend bar chart for All or one subcategory, **See entries** (History filtered to it) and **Manage**. A category with no subcategories shows a prompt to add some.
 
 ### More
-Settings: **Appearance** (System / Light / Dark) → Categories (icon picker; expense categories also manage their subcategories: add, rename, delete), Recurring, Backup & restore.
+Settings: **Appearance** (System / Light / Dark) → Categories, Recurring, Backup & restore.
+
+**Categories** has **Expense / Income tabs** (with counts) and a full-width *New expense/income category* button at the top, so adding to either list never needs scrolling; a new category opens on the tab you are viewing. Expense categories also manage their subcategories (add, rename, delete) and the icon picker.
 
 ## Add / edit entry (sheet)
 Expense/Income toggle → large amount with a **built-in keypad** (no system keyboard; physical digits and Backspace also work) → live **budget impact** line ("Food would be ৳2,950 over budget…") → categories ranked by recent use → optional **subcategory** chips for expenses (with inline *New*; tap again to clear) → *Repeat* chips from recent entries → date (relative label, native picker) and optional note → Save (states the amount). Edit adds Delete. Save is disabled until amount > 0.

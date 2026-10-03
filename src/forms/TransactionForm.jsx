@@ -51,9 +51,9 @@ function budgetImpact({ type, category, minor, budgets, monthTxs, editingId }) {
 }
 
 // `initial` is an existing transaction (edit) or undefined (add).
-export default function TransactionForm({ initial, onClose }) {
+export default function TransactionForm({ initial, defaultType, onClose }) {
   const { list } = useCategories()
-  const [type, setType] = useState(initial?.type || 'expense')
+  const [type, setType] = useState(initial?.type || defaultType || 'expense')
   const [amount, setAmount] = useState(initial ? toInput(initial.amount) : '')
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? null)
   const [subId, setSubId] = useState(initial?.subcategoryId ?? null)
