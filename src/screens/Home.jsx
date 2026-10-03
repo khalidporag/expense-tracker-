@@ -3,6 +3,7 @@ import MonthNav from '../components/MonthNav.jsx'
 import Icon from '../components/Icon.jsx'
 import { Empty, Pill, Progress, Stat, TxRow } from '../components/Bits.jsx'
 import { useMonthData } from '../hooks/useMonthData.js'
+import { monthReport, savingsSignals } from '../lib/savings.js'
 import { allowance, buildActions, categoryDeltas, projectSpend, suggestMove } from '../lib/insights.js'
 import { formatMoney, formatTaka } from '../lib/money.js'
 import { monthEnd, monthName } from '../lib/dates.js'
@@ -85,14 +86,17 @@ function Actions({ d, go }) {
   const { info, rows, totals, rules, byId, prevTxs, txs, todayISO, month } = d
   if (!info.isCurrent) return null
   const prev = new Map(categoryDeltas(txs, prevTxs, info.day).map((x) => [x.categoryId, x.prev]))
+  const prevIncome = prevTxs.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+  const rep = monthReport({ month, txs, deposits: d.deposits, setting: d.savingsTarget, prevIncome })
   const actions = buildActions({
     info, rows, totals, prevByCategory: prev, todayISO,
     rules: rules.map((r) => ({ ...r, label: r.note || byId.get(r.categoryId)?.name })),
+    savings: savingsSignals({ plans: d.plans, deposits: d.deposits, todayISO, target: rep.target, saved: rep.saved, kept: rep.kept }),
   }).slice(0, 4)
   const move = suggestMove(rows)
   // Nothing to say yet (no budgets, nothing spent): the hero above already invites setting budgets.
   if (actions.length === 0 && rows.length === 0) return null
-  const pill = { over: ['over', 'up', 'Over budget'], warn: ['warn', 'info', 'Running low'], upcoming: ['info', 'repeat', 'Coming up'], setup: ['info', 'target', 'Get started'] }
+  const pill = { over: ['over', 'up', 'Over budget'], warn: ['warn', 'info', 'Running low'], upcoming: ['info', 'repeat', 'Coming up'], deposit: ['warn', 'coins', 'Deposit due'], save: ['info', 'target', 'Savings goal'], maturity: ['info', 'calendar', 'Maturing soon'], setup: ['info', 'target', 'Get started'] }
 
   const run = (cta, a) => {
     if (cta.go === 'history') go('history', { categoryId: a.categoryId, from: `${month}-01`, to: monthEnd(month) })
@@ -189,6 +193,35 @@ function Breakdown({ d, go, onDetail }) {
   )
 }
 
+// Savings at a glance: this month's deposits against the goal, or an invitation to start.
+function SavingsCard({ d, go }) {
+  const { info, summary, plans, deposits, savingsTarget, prevTxs, txs, month } = d
+  if (info.isFuture) return null
+  const prevIncome = prevTxs.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+  const rep = monthReport({ month, txs, deposits, setting: savingsTarget, prevIncome })
+  if (!savingsTarget && plans.length === 0) {
+    if (!(summary.income > 0 && info.isCurrent)) return null
+    return (
+      <button className="card tap" style={{ textAlign: 'left', width: '100%' }} onClick={() => go('savings')} aria-label="Start saving">
+        <div className="eyebrow">Savings</div>
+        <p style={{ marginTop: 6, fontWeight: 600 }}>Set a monthly savings goal, or add a DPS or Sanchay Patra plan.</p>
+        <p className="muted small" style={{ marginTop: 4 }}>See what you will have in 2–3 years.</p>
+      </button>
+    )
+  }
+  return (
+    <button className="card tap" style={{ textAlign: 'left', width: '100%' }} onClick={() => go('savings')} aria-label="Savings this month">
+      <div className="between"><span className="eyebrow">Savings · {monthName(month)}</span><span className="muted small">{plans.length} {plans.length === 1 ? 'plan' : 'plans'}</span></div>
+      <div className="row" style={{ alignItems: 'baseline', marginTop: 6, flexWrap: 'wrap' }}>
+        <span className="fig pos" style={{ fontSize: 28, fontWeight: 800 }}>{formatMoney(rep.saved)}</span>
+        {rep.target > 0 && <span className="muted">of {formatMoney(rep.target)} goal</span>}
+      </div>
+      {rep.target > 0 && <div style={{ marginTop: 10 }}><Progress ratio={rep.saved / rep.target} label="Savings goal progress" /></div>}
+      <div className="muted small" style={{ marginTop: 8 }}>{rep.targetMet ? 'Goal reached ✓' : rep.target > 0 ? `${formatMoney(rep.shortfall)} to go` : 'No monthly goal yet'} · Kept {formatMoney(rep.kept)} this month</div>
+    </button>
+  )
+}
+
 export default function Home({ month, onMonth, onEdit, onDetail, go }) {
   const d = useMonthData(month)
   if (!d.ready) return null
@@ -202,6 +235,7 @@ export default function Home({ month, onMonth, onEdit, onDetail, go }) {
         <Stat label="Spent"><span className="money-out">{formatMoney(summary.expense)}</span></Stat>
         <Stat label="Kept">{formatMoney(summary.balance)}</Stat>
       </section>
+      <SavingsCard d={d} go={go} />
       <Actions d={d} go={go} />
       <Breakdown d={d} go={go} onDetail={onDetail} />
       <section className="stack tight" aria-label="Recent entries">

@@ -15,7 +15,7 @@ On first visits in a browser a slim banner above the tab bar offers to install t
 
 **Back button:** closes the topmost thing first (sheet, search panel, a Settings sub-page), then returns to Home from other tabs, and only on Home asks *Exit Expenses?* (Stay / Exit).
 
-Tabs: **Home · History · [+] · Insights · Budgets**. **+** opens the New entry sheet from anywhere. Settings (categories, recurring, backup) opens from the sliders button on Home.
+Tabs: **Home · History · [+] · Insights · Plan**. *Plan* holds two views, **Budgets** and **Savings**, switched with a control at the top (the tab remembers the last one). **+** opens the New entry sheet from anywhere. Settings (categories, recurring, backup) opens from the sliders button on Home.
 The selected month is shared by Home, Insights and Budgets. "See entries" links open History pre-filtered (category + month range).
 
 ## Screens
@@ -37,6 +37,14 @@ Search notes · filter chips (All/Expenses/Income, Category, Subcategory once a 
 
 ### Category detail (sheet)
 Opened from a Home breakdown row. Month total with change vs last month (same days), then the category split by **subcategory** (amount, entries, share bar, ▲/▼ vs last month; entries without one are "Not assigned"), a 6-month trend bar chart for All or one subcategory, **See entries** (History filtered to it) and **Manage**. A category with no subcategories shows a prompt to add some.
+
+### Savings (Plan → Savings)
+- **This month**: saved so far (deposits) against the monthly goal with a progress bar and what is left to do, plus Earned / Spent / Kept. *Set / Edit goal* (fixed amount or % of income) and *Month report*.
+- **Plans** (*New savings plan*): **DPS** (monthly installment over 1–10 years), **Sanchay Patra / FDR** (one deposit; profit monthly, quarterly or at maturity) and **Savings goal** (a target by a date; works out the monthly amount). Each card shows progress, status (*Paid this month* / *Due 10 Oct* / *Overdue* / *Matured*), the maturity date with year and the expected payout after tax. Tapping a card opens the plan: payout estimate, **Record a deposit** (pre-filled with the installment), deposit history, edit/delete. The new-plan form shows a live estimate; interest rate and tax are typed in, nothing is pre-filled.
+- **Plans total**: what plans commit each month (and whether that covers the goal), deposited so far, expected back at maturity.
+- **Last 6 months**: saved vs goal per month (*Met* flag, earned/spent/saved %); tap a month for its report.
+- **Month report** (sheet; also via search "Monthly report"): one-line summary (earned, spent, saved), goal progress, kept / moved into savings / left in hand, budget summary, spending by category (share of spending and of income, budget %), income by source.
+- Home shows a Savings card (saved vs goal) and, in "Do this next", deposit-due, goal-at-risk and maturing-soon cards.
 
 ### More
 Settings: **Appearance** (System / Light / Dark) → Categories, Recurring, Backup & restore.

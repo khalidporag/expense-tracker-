@@ -294,3 +294,116 @@ describe('install prompt', () => {
     expect(shouldShowBanner({ ...base, automated: true, forced: true })).toBe(true)
   })
 })
+
+import { dpsMaturity, lumpOutcome, goalMonthly, projection, planStatus, committedMonthly, monthlyTarget, monthReport, savingsHistory, savingsSignals } from './savings.js'
+
+describe('savings schemes (estimates)', () => {
+  const T = (n) => n * 100
+  it('DPS: equal monthly installments, quarterly compounding, source tax on the interest', () => {
+    const plain = dpsMaturity({ installment: T(1000), termMonths: 12, rateBp: 800, taxBp: 0 })
+    expect(plain.deposited).toBe(T(12000))
+    expect(Math.abs(plain.maturity - T(12529.33))).toBeLessThanOrEqual(1) // independent reference: 12,529.3256
+    const taxed = dpsMaturity({ installment: T(5000), termMonths: 36, rateBp: 950, taxBp: 1000 })
+    expect(taxed.deposited).toBe(T(180000))
+    expect(Math.abs(taxed.grossInterest - T(28722.17))).toBeLessThanOrEqual(1)
+    expect(Math.abs(taxed.netInterest - T(25849.95))).toBeLessThanOrEqual(1)
+    expect(taxed.maturity).toBe(taxed.deposited + taxed.netInterest)
+    expect(taxed.grossInterest - taxed.tax).toBe(taxed.netInterest)
+  })
+  it('DPS with no interest returns exactly what was deposited', () => {
+    expect(dpsMaturity({ installment: T(500), termMonths: 24, rateBp: 0, taxBp: 1000 }).maturity).toBe(T(12000))
+  })
+  it('one-time deposit with profit at maturity compounds quarterly', () => {
+    const o = lumpOutcome({ principal: T(100000), termMonths: 60, rateBp: 1000, taxBp: 0, payout: 'maturity' })
+    expect(Math.abs(o.maturity - T(163861.64))).toBeLessThanOrEqual(1)
+  })
+  it('one-time deposit with monthly profit pays out along the way and returns the principal', () => {
+    const o = lumpOutcome({ principal: T(200000), termMonths: 60, rateBp: 1128, taxBp: 1000, payout: 'monthly' })
+    expect(o).toMatchObject({ periods: 60, grossPerPayout: T(1880), netPerPayout: T(1692), maturity: T(200000) })
+    expect(o.netProfit).toBe(T(1692) * 60)
+    expect(o.totalReturn).toBe(T(200000) + T(1692) * 60)
+    expect(lumpOutcome({ principal: T(100000), termMonths: 36, rateBp: 1000, payout: 'quarterly' }).periods).toBe(12)
+  })
+  it('goal: monthly amount to reach a target, with or without interest', () => {
+    expect(goalMonthly({ target: T(120000), termMonths: 24 })).toBe(T(5000))
+    const m = goalMonthly({ target: T(120000), termMonths: 24, rateBp: 700, taxBp: 1000 })
+    expect(m).toBeLessThan(T(5000))
+    // round trip: paying that amount as a DPS reaches (at least) the target
+    expect(dpsMaturity({ installment: m, termMonths: 24, rateBp: 700, taxBp: 1000 }).maturity).toBeGreaterThanOrEqual(T(120000) - 24)
+  })
+  it('projection picks the right model per plan kind', () => {
+    expect(projection({ kind: 'goal', target: T(50000) }).total).toBe(T(50000))
+    expect(projection({ kind: 'lump', principal: T(1000), termMonths: 12, rateBp: 1000, taxBp: 0, payout: 'monthly' }).total).toBe(T(1000) + 12 * Math.round(T(1000) * 0.1 / 12))
+  })
+})
+
+describe('where a plan stands', () => {
+  const T = (n) => n * 100
+  const dps = { id: 1, kind: 'dps', name: 'DPS', startDate: '2026-01-10', termMonths: 36, rateBp: 950, taxBp: 1000, installment: T(5000) }
+  const dep = (id, planId, date, amount = T(5000)) => ({ id, planId, date, amount })
+  const paid = Array.from({ length: 9 }, (_, i) => dep(i + 1, 1, `2026-${String(i + 1).padStart(2, '0')}-10`))
+
+  it('counts installments due, what is behind, and whether this month is paid', () => {
+    const s = planStatus(dps, paid, '2026-10-18') // Jan..Oct = 10 due, Oct not paid yet
+    expect(s).toMatchObject({ state: 'running', deposited: T(45000), expectedByNow: T(50000), behind: T(5000), paidThisMonth: false, dueDate: '2026-10-10', overdue: true, maturityDate: '2029-01-10' })
+    const s2 = planStatus(dps, [...paid, dep(10, 1, '2026-10-10')], '2026-10-18')
+    expect(s2).toMatchObject({ behind: 0, paidThisMonth: true, dueDate: null, overdue: false })
+    expect(planStatus(dps, paid, '2026-10-05').overdue).toBe(false) // due on the 10th, not yet late
+  })
+  it('knows upcoming and matured plans', () => {
+    expect(planStatus(dps, [], '2025-12-01').state).toBe('upcoming')
+    expect(planStatus(dps, [], '2029-01-10').state).toBe('matured')
+    expect(planStatus(dps, [], '2029-01-10').dueDate).toBeNull()
+  })
+  it('one-time deposits progress by time and are never "due" monthly', () => {
+    const lump = { id: 2, kind: 'lump', name: 'SP', startDate: '2025-12-01', termMonths: 60, rateBp: 1128, taxBp: 1000, principal: T(200000), payout: 'monthly' }
+    const s = planStatus(lump, [{ id: 1, planId: 2, date: '2025-12-01', amount: T(200000) }], '2026-10-18')
+    expect(s.dueDate).toBeNull()
+    expect(s.deposited).toBe(T(200000))
+    expect(s.progress).toBeCloseTo(11 / 60, 2)
+  })
+  it('sums what the running monthly plans commit each month', () => {
+    const goal = { id: 3, kind: 'goal', name: 'Fund', startDate: '2026-06-01', termMonths: 24, target: T(120000), installment: T(5000) }
+    const lump = { id: 2, kind: 'lump', startDate: '2025-12-01', termMonths: 60, principal: T(200000) }
+    expect(committedMonthly([dps, goal, lump], '2026-10-18')).toBe(T(10000))
+    expect(committedMonthly([{ ...dps, active: false }, goal], '2026-10-18')).toBe(T(5000))
+  })
+})
+
+describe('monthly savings picture', () => {
+  const T = (n) => n * 100
+  const tx = (id, type, date, amount, categoryId) => ({ id, type, date, amount, categoryId })
+  const txs = [tx(1, 'income', '2026-10-01', T(60000), 8), tx(2, 'income', '2026-10-15', T(2000), 9), tx(3, 'expense', '2026-10-03', T(20000), 1), tx(4, 'expense', '2026-10-09', T(7640), 2), tx(5, 'expense', '2026-09-03', T(41300), 1)]
+  const deposits = [{ id: 1, planId: 1, date: '2026-10-10', amount: T(5000) }, { id: 2, planId: 3, date: '2026-10-05', amount: T(3000) }, { id: 3, planId: 1, date: '2026-09-10', amount: T(5000) }]
+
+  it('targets: a fixed amount, or a share of income (falling back to last month when none yet)', () => {
+    expect(monthlyTarget({ mode: 'amount', amount: T(10000) }, 0)).toBe(T(10000))
+    expect(monthlyTarget({ mode: 'percent', percent: 20 }, T(62000))).toBe(T(12400))
+    expect(monthlyTarget({ mode: 'percent', percent: 20 }, 0, T(50000))).toBe(T(10000))
+    expect(monthlyTarget(null, T(1))).toBe(0)
+  })
+  it('reports earned, spent by category, saved and the gap to the target', () => {
+    const r = monthReport({ month: '2026-10', txs, deposits, setting: { mode: 'amount', amount: T(10000) } })
+    expect(r).toMatchObject({ income: T(62000), expense: T(27640), kept: T(34360), saved: T(8000), target: T(10000), shortfall: T(2000), targetMet: false, unallocated: T(26360), savedPct: 13, spentPct: 45 })
+    expect(r.expenseByCategory).toEqual([[1, T(20000)], [2, T(7640)]])
+    expect(r.incomeByCategory).toEqual([[8, T(60000)], [9, T(2000)]])
+  })
+  it('deposits are savings, never spending', () => {
+    const r = monthReport({ month: '2026-10', txs: [], deposits, setting: null })
+    expect(r.expense).toBe(0)
+    expect(r.saved).toBe(T(8000))
+    expect(r.savedPct).toBeNull() // no income to compare with
+  })
+  it('history is oldest first and a met target is flagged', () => {
+    const h = savingsHistory(['2026-09', '2026-10'], { txs, deposits, setting: { mode: 'amount', amount: T(5000) } })
+    expect(h.map((x) => x.month)).toEqual(['2026-09', '2026-10'])
+    expect(h.map((x) => x.targetMet)).toEqual([true, true])
+  })
+  it('signals: unpaid installments and plans maturing within two months', () => {
+    const plans = [{ id: 1, kind: 'dps', name: 'DPS', startDate: '2023-11-10', termMonths: 36, rateBp: 900, taxBp: 1000, installment: T(5000) }]
+    const s = savingsSignals({ plans, deposits: [], todayISO: '2026-10-18', target: T(10000), saved: 0, kept: T(5000) })
+    expect(s.due).toEqual([{ name: 'DPS', amount: T(5000), dueDate: '2026-10-10', overdue: true, days: -8 }])
+    expect(s.maturing).toHaveLength(1)
+    expect(s.maturing[0]).toMatchObject({ name: 'DPS', date: '2026-11-10', days: 23 })
+  })
+})

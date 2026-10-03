@@ -38,6 +38,10 @@ const ok = (c, m) => { if (c) console.log('✓', m); else { console.log('✗ FAI
   const RED = 'rgb(185, 28, 28)'
   const tab = (name) => page.click(`nav .nav-item:has-text("${name}")`)
   const closed = () => page.waitForSelector('.sheet', { state: 'detached' })
+  const palette = () => page.waitForSelector('.palette')
+  const openSearch = async () => { await page.click('button[aria-label="Search the app"]'); await palette() }
+  const typeQuery = async (q) => { await page.fill('.palette input', q); await page.waitForTimeout(60) }
+  const firstResult = () => page.locator('.palette [role=option]').first().innerText()
 
   await page.goto(URL)
   await page.waitForSelector('.hero')
@@ -114,7 +118,7 @@ const ok = (c, m) => { if (c) console.log('✓', m); else { console.log('✗ FAI
   await page.screenshot({ path: `${S}/insights.png`, fullPage: true })
 
   // --- Budgets: overage + suggestion to move budget ---
-  await tab('Budgets')
+  await tab('Plan')
   await expectText('main', /Over by ৳1,100/, 'budgets: Food over by ৳1,100')
   await expectText('main', /Shopping has ৳5,900 unused[\s\S]*Move ৳1,100 to Food/, 'budgets: suggests moving ৳1,100 from Shopping')
   await expectText('main', /৳1,182\/day available/, 'budgets: daily allowance chip')
@@ -127,6 +131,136 @@ const ok = (c, m) => { if (c) console.log('✓', m); else { console.log('✗ FAI
   await tab('Home')
   await page.waitForFunction(() => !/over its budget/.test(document.querySelector('main').innerText))
   ok(true, 'home: over-budget action is gone after the move')
+
+  // --- Savings: monthly goal, plans (DPS / Sanchay Patra / goal), deposits, month report ---
+  const taka = (n) => '৳' + new Intl.NumberFormat('en-BD', { maximumFractionDigits: 0 }).format(n)
+  const inOrder = (text, parts) => { const t = text.toLowerCase(); let at = 0; for (const p of parts) { const i = t.indexOf(p.toLowerCase(), at); if (i < 0) return p; at = i + p.length } return null } // labels are CSS-uppercased, so compare ignoring case
+  const expectInOrder = async (sel, parts, msg) => {
+    const t = await body(sel)
+    const missing = inOrder(t, parts)
+    ok(missing === null, missing === null ? msg : `${msg} — missing "${missing}" in: ${t.slice(0, 400).replace(/\n/g, ' | ')}`)
+  }
+  await tab('Home')
+  await expectText('[aria-label="Savings this month"]', /Savings · October[\s\S]*৳8,000[\s\S]*of ৳10,000 goal[\s\S]*৳2,000 to go[\s\S]*Kept ৳34,360/i, 'savings (Home): card shows saved vs goal and what is kept')
+  await expectText('main', /Put ৳2,000 aside to reach your savings goal/, 'savings (Home): "do this next" says how much to put aside')
+  await expectText('main', /Goal ৳10,000, saved ৳8,000 so far\. You have ৳34,360 left this month\./, 'savings (Home): ...with the numbers behind it')
+  await page.click('[aria-label="Savings this month"]')
+  await page.waitForSelector('[aria-label="Savings plans"]')
+  ok((await page.getAttribute('.seg button:has-text("Savings")', 'aria-pressed')) === 'true', 'savings: the Home card opens Plan > Savings')
+  await expectText('[aria-label="Savings this month"]', /Saved in October[\s\S]*৳8,000[\s\S]*of ৳10,000 goal · 13% of income[\s\S]*৳2,000 to go\. You have ৳34,360 kept this month\.[\s\S]*Earned[\s\S]*৳62,000[\s\S]*Spent[\s\S]*৳27,640[\s\S]*Kept[\s\S]*৳34,360/i, 'savings: this month — saved vs goal, earned, spent, kept')
+  const cards = (await body('[aria-label="Savings plans"]'))
+  await expectInOrder('[aria-label="Savings plans"]', ['City Bank DPS', 'DPS · 3 years · 9.5%', 'Paid this month', `${taka(50000)} of ${taka(180000)}`, 'Matures 10 Jan 2029', `Expected at maturity about ${taka(205850)}`], 'savings: DPS card (progress, maturity date, expected payout after 10% tax)')
+  await expectInOrder('[aria-label="Savings plans"]', ['Paribar Sanchay Patra', 'One-time deposit · 5 years · 11.28%', 'Earning', `${taka(200000)} of ${taka(200000)}`, 'Matures 1 Dec 2030', `Profit about ${taka(1692)} a month after tax`], 'savings: Sanchay Patra card (monthly profit after tax)')
+  await expectInOrder('[aria-label="Savings plans"]', ['Emergency fund', 'Savings goal · 2 years', 'Paid this month', `${taka(23000)} of ${taka(120000)}`, 'By 1 Jun 2028', `Save ${taka(5000)} a month to reach it`], 'savings: goal card')
+  await expectInOrder('[aria-label="Plans total"]', ['Plans commit each month', taka(10000), 'Fully covered', 'Deposited so far', taka(273000), 'Expected back at maturity', taka(627370)], 'savings: totals (committed, covered, deposited, expected back)')
+  await expectInOrder('[aria-label="Last six months"]', ['October', taka(8000), 'of ৳10,000', 'Earned ৳62,000 · Spent ৳27,640 · Saved 13%', 'September', taka(10000), 'Met', 'Saved 16%'], 'savings: last six months, newest first, with goal met flags')
+  await noOverflow('Savings')
+  await page.screenshot({ path: `${S}/savings.png`, fullPage: true })
+
+  // monthly report
+  await page.click('button[aria-label="October report"]')
+  await expectText('.sheet', /October 2026 report[\s\S]*You earned ৳62,000, spent ৳27,640 \(45% of income\) and saved ৳8,000 \(13%\)\./, 'report: one-line summary')
+  await expectInOrder('.sheet', ['Savings goal', taka(8000), 'of ৳10,000', '৳2,000 to go'], 'report: goal progress')
+  await expectInOrder('.sheet', ['Kept (earned − spent)', taka(34360), 'Moved into savings plans', taka(8000), 'Left in hand', taka(26360)], 'report: kept vs saved vs left in hand')
+  await expectText('.sheet', /Budget ৳43,000: spent ৳27,640 \(64%\)/, 'report: budget summary')
+  await expectText('.sheet', /Food[\s\S]*৳15,100[\s\S]*55% of spending · 24% of income/, 'report: spending by category with share of income')
+  await expectText('.sheet', /Where it came from[\s\S]*Salary[\s\S]*৳55,000[\s\S]*Business[\s\S]*৳7,000/i, 'report: income by category')
+  await noOverflow('month report sheet')
+  await page.screenshot({ path: `${S}/report.png` })
+  await page.click('.sheet button[aria-label="Close"]')
+  await closed()
+
+  // plan detail + recording and removing a deposit
+  await page.click('[aria-label^="City Bank DPS"]')
+  await expectInOrder('.sheet', ['City Bank DPS', 'DPS · 3 years · 9.5%', 'Paid this month', 'You deposit in total', taka(180000), 'Interest after tax', taka(25850), 'Expected at maturity', taka(205850), 'Matures on', '10 Jan 2029', 'Deposits (10)'], 'plan detail: progress, payout estimate, deposits')
+  ok((await page.inputValue('input[aria-label="Deposit amount"]')) === '5000', 'plan detail: the deposit amount is pre-filled with the installment')
+  await page.screenshot({ path: `${S}/plan-detail.png` })
+  await page.click('button:has-text("Record deposit")')
+  await expectText('.sheet', /Recorded ✓[\s\S]*Deposits \(11\)/i, 'plan detail: recording a deposit adds it')
+  await page.click('.sheet button[aria-label="Close"]')
+  await closed()
+  await expectText('[aria-label="Savings this month"]', /৳13,000[\s\S]*Goal reached ✓/, 'savings: the extra deposit pushes this month over the goal')
+  await page.click('[aria-label^="City Bank DPS"]')
+  await page.click('.sheet button[aria-label*="18 Oct"]')
+  await expectText('.sheet', /Deposits \(10\)/i, 'plan detail: a deposit can be removed')
+  await page.click('.sheet button[aria-label="Close"]')
+  await closed()
+  await expectText('[aria-label="Savings this month"]', /৳8,000[\s\S]*of ৳10,000 goal/, 'savings: back to ৳8,000 after removing it')
+
+  // the monthly goal: fixed amount or share of income
+  await page.click('button:has-text("Edit goal")')
+  await page.click('.sheet .seg button:has-text("% of income")')
+  await page.fill('input[aria-label="Percent of income"]', '20')
+  await expectText('.sheet', /About ৳12,400 on the income you have recorded/, 'goal: a percentage turns into an amount from this month\'s income')
+  await page.click('button:has-text("Save goal")')
+  await closed()
+  await expectText('[aria-label="Savings this month"]', /of ৳12,400 goal/, 'goal: 20% of ৳62,000 = ৳12,400')
+  await page.click('button:has-text("Edit goal")')
+  await page.click('.sheet .seg button:has-text("Fixed amount")')
+  await page.fill('input[aria-label="Monthly savings goal"]', '10000')
+  await page.click('button:has-text("Save goal")')
+  await closed()
+  await expectText('[aria-label="Savings this month"]', /of ৳10,000 goal/, 'goal: back to a fixed ৳10,000')
+
+  // new plans: live estimates for each type
+  await page.click('button:has-text("New savings plan")')
+  const saveBtn = page.locator('.sheet button:has-text("Save plan")')
+  await page.fill('input[aria-label="Plan name"]', 'Test DPS')
+  await page.fill('#plan-amount', '1000')
+  ok(await saveBtn.isDisabled(), 'new plan: cannot be saved without an interest rate (nothing is pre-filled)')
+  await page.click('.sheet .chip:has-text("1 yr")')
+  await page.fill('#plan-rate', '8')
+  await page.fill('#plan-tax', '0')
+  await expectText('[aria-label="Estimate"]', /You deposit ৳12,000 over 12 months\. Interest after tax is about ৳529, so you get about ৳12,529 on/, 'new DPS: live estimate (৳1,000 x 12 at 8%)')
+  ok(await saveBtn.isEnabled(), 'new plan: can be saved once complete')
+  await page.click('.sheet .seg button:has-text("Sanchay / FDR")')
+  await page.fill('#plan-amount', '100000')
+  await page.click('.sheet .chip:has-text("5 yrs")')
+  await page.fill('#plan-rate', '10')
+  await page.fill('#plan-tax', '10')
+  await expectText('[aria-label="Estimate"]', new RegExp(`About ${taka(750)} a month after tax \\(${taka(45000)} in total\\), and your ${taka(100000)} comes back on`), 'new Sanchay Patra: monthly profit after tax')
+  await page.click('.sheet .seg button:has-text("Quarterly")')
+  await expectText('[aria-label="Estimate"]', /About ৳2,250 every 3 months after tax \(৳45,000 in total\)/, 'new Sanchay Patra: quarterly profit')
+  await page.click('.sheet .seg button:has-text("At maturity")')
+  await expectText('[aria-label="Estimate"]', new RegExp(`Profit after tax is about ${taka(57475)}, so you get about ${taka(157475)} on`), 'new Sanchay Patra: profit compounded to maturity')
+  await page.click('.sheet .seg button:has-text("Goal")')
+  await page.fill('#plan-amount', '120000')
+  await page.click('.sheet .chip:has-text("2 yrs")')
+  await page.fill('#plan-rate', '')
+  await page.fill('input[aria-label="Plan name"]', 'Test goal')
+  await expectText('[aria-label="Estimate"]', new RegExp(`Save ${taka(5000)} a month for 24 months to reach ${taka(120000)} by`), 'new goal: monthly saving needed')
+  await noOverflow('plan form')
+  await page.screenshot({ path: `${S}/plan-form.png` })
+  await saveBtn.click()
+  await closed()
+  await page.waitForSelector('[aria-label^="Test goal"]')
+  ok((await page.locator('[aria-label="Savings plans"] [role=button]').count()) === 4, 'new plan: appears in the list')
+  await page.click('[aria-label^="Test goal"]')
+  await page.click('.sheet button:has-text("Edit plan")')
+  await page.click('.sheet button:has-text("Delete")')
+  await closed()
+  await page.waitForFunction(() => document.querySelectorAll('[aria-label="Savings plans"] [role=button]').length === 3)
+  ok(true, 'plan: can be edited and deleted (with its deposits)')
+
+  // savings are findable, and the Plan tab remembers where you were
+  for (const [q, expectTitle] of [['dps', 'Savings'], ['sanchay patra', 'Savings'], ['savings goal', 'Savings'], ['monthly report', 'Monthly report']]) {
+    await openSearch()
+    await typeQuery(q)
+    ok(new RegExp(`^${expectTitle}`).test(await firstResult()), `search: "${q}" finds ${expectTitle}`)
+    await page.click('button[aria-label="Close search"]')
+    await page.waitForSelector('.palette', { state: 'detached' })
+  }
+  await openSearch()
+  await typeQuery('monthly report')
+  await page.press('.palette input', 'Enter')
+  await expectText('.sheet', /October 2026 report/, 'search: "Monthly report" opens the report')
+  await page.click('.sheet button[aria-label="Close"]')
+  await closed()
+  await tab('Home')
+  await tab('Plan')
+  ok((await page.getAttribute('.seg button:has-text("Savings")', 'aria-pressed')) === 'true', 'Plan tab remembers Savings when you come back')
+  await page.click('.seg button:has-text("Budgets")')
+  await tab('Home')
 
   // --- Add entry with the keypad; impact preview; save ---
   await page.click('button[aria-label="Add entry"]')
@@ -190,7 +324,7 @@ const ok = (c, m) => { if (c) console.log('✓', m); else { console.log('✗ FAI
     const ok1 = a && g && Math.abs((a.y + a.height / 2) - (g.y + g.height / 2)) <= 1 && Math.abs(a.height - g.height) <= 1 && a.x + a.width < g.x
     ok(!!ok1, `${where}: search bar and gear share one row (same height, same centre line)`)
   }
-  for (const name of ['Home', 'History', 'Insights', 'Budgets']) {
+  for (const name of ['Home', 'History', 'Insights', 'Plan']) {
     await tab(name)
     ok((await page.locator('.topbar').count()) === 1, `${name}: top bar present`)
     await aligned(name)
@@ -198,10 +332,6 @@ const ok = (c, m) => { if (c) console.log('✓', m); else { console.log('✗ FAI
   await tab('Home')
 
   // --- smart search ---
-  const palette = () => page.waitForSelector('.palette')
-  const openSearch = async () => { await page.click('button[aria-label="Search the app"]'); await palette() }
-  const typeQuery = async (q) => { await page.fill('.palette input', q); await page.waitForTimeout(60) }
-  const firstResult = () => page.locator('.palette [role=option]').first().innerText()
   await openSearch()
   await expectText('.palette', /Quick actions[\s\S]*Add expense[\s\S]*Add income/i, 'search: empty query offers quick actions')
   await noOverflow('search panel')
@@ -340,6 +470,7 @@ const ok = (c, m) => { if (c) console.log('✓', m); else { console.log('✗ FAI
   await page.screenshot({ path: `${S}/detail.png` })
   await page.click('.sheet button:has-text("See entries")')
   await expectText('.trio', /Entries[\s\S]*1\b[\s\S]*Spent[\s\S]*৳1,800/i, 'See entries opens History filtered to Electricity')
+  await page.waitForSelector('select[aria-label="Subcategory"]', { timeout: 4000 }).catch(() => {})
   ok((await page.locator('select[aria-label="Subcategory"]').count()) === 1, 'History offers a subcategory filter for the chosen category')
   await tab('Home')
 
@@ -401,6 +532,38 @@ const ok = (c, m) => { if (c) console.log('✓', m); else { console.log('✗ FAI
   await page.click('button:has-text("Back")')
   await page.click('button[aria-label="Previous month"]')
   await page.click('button[aria-label="Next month"]')
+
+  // backups carry savings; a backup from before savings existed still imports
+  await page.click('button[aria-label^="Settings"]')
+  await page.click('.row-card:has-text("Backup")')
+  const [dl2] = await Promise.all([page.waitForEvent('download'), page.click('button:has-text("Export")')])
+  const exportPath = path.join(S, 'export-savings.json')
+  await dl2.saveAs(exportPath)
+  const exported = JSON.parse(require('fs').readFileSync(exportPath, 'utf8'))
+  ok(exported.version === 4 && exported.plans.length === 3 && exported.deposits.length === 16 && exported.settings.some((x) => x.key === 'savingsTarget'), `backup: export includes savings plans, deposits and the goal (${exported.plans.length} plans, ${exported.deposits.length} deposits)`)
+  const bare = JSON.parse(require('fs').readFileSync(FIXTURE, 'utf8'))
+  delete bare.plans; delete bare.deposits; delete bare.settings
+  const barePath = path.join(S, 'fixture-no-savings.json')
+  require('fs').writeFileSync(barePath, JSON.stringify(bare))
+  await page.setInputFiles('input[type=file]', barePath)
+  await expectText('[role=status]', /restored/, 'backup: a file from before savings existed imports')
+  ok((await idb('plans')).length === 0 && (await idb('deposits')).length === 0 && (await idb('settings')).length === 0, 'backup: import replaces savings data too (an older file has none)')
+  await page.click('button:has-text("Back")')
+  await page.click('button:has-text("Back")')
+  await expectText('main', /Set a monthly savings goal, or add a DPS or Sanchay Patra plan/, 'savings (Home): invites you to start when there is no goal or plan')
+  await tab('Plan')
+  await page.click('.seg button:has-text("Savings")')
+  await expectText('main', /No plans yet\. Add a DPS, a Sanchay Patra or a savings goal/, 'savings: friendly empty state')
+  await expectText('main', /Set a monthly savings goal to see how close you are each month/, 'savings: prompts for a goal')
+  await tab('Home')
+  // restore the full sample month for what follows
+  await page.click('button[aria-label^="Settings"]')
+  await page.click('.row-card:has-text("Backup")')
+  await page.setInputFiles('input[type=file]', exportPath)
+  await expectText('[role=status]', /restored/, 'backup: the export restores savings plans again')
+  ok((await idb('plans')).length === 3 && (await idb('deposits')).length === 16, 'backup: round trip keeps 3 plans and 16 deposits')
+  await page.click('button:has-text("Back")')
+  await page.click('button:has-text("Back")')
 
   // --- past month view ---
   await page.click('button[aria-label="Previous month"]')

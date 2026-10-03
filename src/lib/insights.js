@@ -120,7 +120,7 @@ export function suggestMove(rows) {
 }
 
 // "Do this next": data-driven cards, most urgent first. `rows` are budgetStatus() results with a `name`.
-export function buildActions({ info, rows, totals, prevByCategory, rules, todayISO }) {
+export function buildActions({ info, rows, totals, prevByCategory, rules, todayISO, savings = null }) {
   const out = []
   const names = (r) => r.name.toLowerCase()
 
@@ -160,6 +160,35 @@ export function buildActions({ info, rows, totals, prevByCategory, rules, todayI
       detail: `Recurring ${rule.frequency === 'weekly' ? 'weekly' : 'monthly'} ${rule.type}, ${days === 1 ? 'tomorrow' : `in ${days} days`}.`,
       cta: { label: 'View recurring', go: 'recurring' },
     })
+  }
+
+  if (savings) {
+    const dayMonth = (iso) => shortDay(iso).replace(/^\w+ /, '')
+    for (const d of savings.due) {
+      if (d.days > 7) continue
+      out.push({
+        id: `deposit-${d.name}`, kind: 'deposit', weight: 1.5e12 - d.days,
+        title: `${d.name} deposit ${formatMoney(d.amount)} ${d.overdue ? 'was due' : 'is due'} on ${dayMonth(d.dueDate)}`,
+        detail: 'Record it when you pay, so your savings stay accurate.',
+        cta: { label: 'Record deposit', go: 'savings' },
+      })
+    }
+    const short = savings.target - savings.saved
+    if (info.isCurrent && savings.target > 0 && short > 0 && (info.ratio >= 0.5 || savings.kept < short)) {
+      const kept = Math.max(0, savings.kept)
+      const reachable = kept >= short
+      out.push({
+        id: 'save-target', kind: 'save', weight: 1.2e12,
+        title: reachable ? `Put ${formatMoney(short)} aside to reach your savings goal` : `You're ${formatMoney(short - kept)} short of your savings goal`,
+        detail: reachable
+          ? `Goal ${formatMoney(savings.target)}, saved ${formatMoney(savings.saved)} so far. You have ${formatMoney(kept)} left this month.`
+          : `Goal ${formatMoney(savings.target)}, saved ${formatMoney(savings.saved)}. Only ${formatMoney(kept)} is left after spending, so trimming spending now can close the gap.`,
+        cta: { label: 'See savings', go: 'savings' },
+      })
+    }
+    for (const m of savings.maturing) {
+      out.push({ id: `maturity-${m.name}`, kind: 'maturity', weight: 0.9e12 - m.days, title: `${m.name} matures on ${dayMonth(m.date)}`, detail: `About ${formatTaka(m.amount)} comes back. Decide where to put it next.`, cta: { label: 'See plan', go: 'savings' } })
+    }
   }
 
   if (rows.length === 0 && totals.anySpending) {

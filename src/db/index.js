@@ -52,5 +52,13 @@ db.version(5).stores({
   transactions: '++id, type, date, categoryId, subcategoryId, recurringId',
 })
 
+// v6: savings. `plans` are DPS / one-time deposits (Sanchay Patra, FDR) / savings goals, `deposits` are the amounts
+// actually put into them (savings, never expenses), `settings` is a small key-value store (the monthly savings target).
+db.version(6).stores({
+  plans: '++id, kind',
+  deposits: '++id, planId, date',
+  settings: 'key',
+})
+
 // Fresh installs (no upgrade path) get the default categories here.
 db.on('populate', (tx) => tx.table('categories').bulkAdd(defaultCategories()))

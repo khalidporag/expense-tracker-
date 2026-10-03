@@ -17,9 +17,12 @@ export function useMonthData(month) {
   const prevTxs = useLiveQuery(async () => (await range(prevMonth)).sort(newestFirst), [prevMonth])
   const budgets = useLiveQuery(() => db.budgets.toArray())
   const rules = useLiveQuery(() => db.recurring.toArray())
+  const plans = useLiveQuery(() => db.plans.toArray())
+  const deposits = useLiveQuery(() => db.deposits.toArray())
+  const targetSetting = useLiveQuery(async () => (await db.settings.get('savingsTarget')) ?? null)
   const cats = useCategories()
   const subs = useSubcategories()
-  const ready = !!(txs && prevTxs && budgets && rules && cats.ready && subs.ready)
+  const ready = !!(txs && prevTxs && budgets && rules && plans && deposits && targetSetting !== undefined && cats.ready && subs.ready)
   if (!ready) return { ready: false }
 
   const todayISO = today()
@@ -42,7 +45,7 @@ export function useMonthData(month) {
   }
 
   return {
-    ready, month, prevMonth, todayISO, info, txs, prevTxs, budgets, rules, cats: cats.list, byId: cats.byId, subById: subs.byId, subsByCategory: subs.byCategory,
+    ready, month, prevMonth, todayISO, info, txs, prevTxs, budgets, rules, plans, deposits, savingsTarget: targetSetting?.value ?? null, cats: cats.list, byId: cats.byId, subById: subs.byId, subsByCategory: subs.byCategory,
     summary, rows, hasBudget, totals, scopeTxs, prevScopeTxs, prevScopeTotal: sum(prevScopeTxs), prevAllTotal: sum(prevTxs),
     unbudgeted: summary.expense - (hasBudget ? totals.spent : 0),
   }

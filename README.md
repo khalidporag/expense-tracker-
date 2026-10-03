@@ -3,7 +3,7 @@
 Personal expense tracker, built as an installable PWA (React + Vite + Dexie/IndexedDB). Currency: BDT (৳).
 Data lives only on your phone — use **More → Backup & restore** regularly.
 
-Features: expenses & income, editable categories, monthly budgets with a daily allowance and forecast, insights (what changed, costliest days, what-if), ranked next actions, recurring items, search & filters, JSON backup, offline, dark mode.
+Features: expenses & income, a monthly savings goal with DPS / Sanchay Patra / goal plans and a monthly report, editable categories, monthly budgets with a daily allowance and forecast, insights (what changed, costliest days, what-if), ranked next actions, recurring items, search & filters, JSON backup, offline, dark mode.
 
 - Scope: [REQUIREMENTS.md](REQUIREMENTS.md) · Screens: [docs/UI.md](docs/UI.md) · Conventions & structure: [CLAUDE.md](CLAUDE.md)
 

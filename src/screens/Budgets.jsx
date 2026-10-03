@@ -79,12 +79,7 @@ export default function Budgets({ month, onMonth }) {
 
   return (
     <div className="stack tight">
-      <div className="page-head">
-        <div>
-          <h1 className="title">Budgets</h1>
-          {info.isCurrent && <div className="muted small">{info.daysLeft} days left</div>}
-        </div>
-      </div>
+      {info.isCurrent && <div className="muted small">{info.daysLeft} days left this month</div>}
       <MonthNav month={month} onChange={onMonth} />
 
       {hasBudget ? <Summary d={d} /> : <Empty icon="target">No budgets yet. Pick a category below to set a monthly limit and get a daily allowance on Home.</Empty>}
