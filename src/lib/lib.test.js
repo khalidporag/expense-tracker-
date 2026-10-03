@@ -248,3 +248,49 @@ describe('welcome splash', () => {
     expect([5, 11, 12, 17, 18, 23].map(greeting)).toEqual(['Good morning', 'Good morning', 'Good afternoon', 'Good afternoon', 'Good evening', 'Good evening'])
   })
 })
+
+import { detectPlatform, shouldShowBanner, isSnoozed, canInstall } from './install.js'
+
+describe('install prompt', () => {
+  const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+  const IPAD_AS_MAC = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15'
+  const ANDROID = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36'
+  const FB_ANDROID = 'Mozilla/5.0 (Linux; Android 14; Pixel 8; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/126.0.0.0 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/450.0.0.0;]'
+  const FB_IOS = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [FBAN/FBIOS;FBAV/450.0.0.0]'
+
+  it('offers the one-tap prompt when the browser provides it', () => {
+    expect(detectPlatform({ ua: ANDROID, hasPrompt: true })).toBe('prompt')
+    expect(detectPlatform({ ua: ANDROID })).toBe('none') // no prompt event: nothing to offer
+  })
+  it('shows the how-to on iPhone and iPad (which has no install button for websites)', () => {
+    expect(detectPlatform({ ua: IPHONE })).toBe('ios')
+    expect(detectPlatform({ ua: IPAD_AS_MAC, maxTouchPoints: 5 })).toBe('ios')
+    expect(detectPlatform({ ua: IPAD_AS_MAC, maxTouchPoints: 0 })).toBe('none') // a real Mac
+  })
+  it('recognises in-app browsers, which cannot install', () => {
+    expect(detectPlatform({ ua: FB_ANDROID, hasPrompt: true })).toBe('inapp')
+    expect(detectPlatform({ ua: FB_IOS })).toBe('inapp')
+  })
+  it('does nothing once installed', () => {
+    expect(detectPlatform({ ua: IPHONE, standalone: true })).toBe('installed')
+    expect(detectPlatform({ ua: ANDROID, hasPrompt: true, standalone: true })).toBe('installed')
+  })
+  it('only offers install where something can be done', () => {
+    expect(['prompt', 'ios', 'inapp', 'installed', 'none'].map(canInstall)).toEqual([true, true, true, false, false])
+  })
+  it('snoozes for 14 days after dismissal', () => {
+    const day = 86400000
+    expect(isSnoozed(null, 1e12)).toBe(false)
+    expect(isSnoozed(1e12, 1e12 + 13 * day)).toBe(true)
+    expect(isSnoozed(1e12, 1e12 + 15 * day)).toBe(false)
+  })
+  it('shows the banner only when useful, un-snoozed, and not for automated browsers unless forced', () => {
+    const base = { platform: 'ios', now: 1e12 }
+    expect(shouldShowBanner(base)).toBe(true)
+    expect(shouldShowBanner({ ...base, platform: 'installed' })).toBe(false)
+    expect(shouldShowBanner({ ...base, platform: 'none' })).toBe(false)
+    expect(shouldShowBanner({ ...base, dismissedAt: 1e12 - 1000 })).toBe(false)
+    expect(shouldShowBanner({ ...base, automated: true })).toBe(false)
+    expect(shouldShowBanner({ ...base, automated: true, forced: true })).toBe(true)
+  })
+})

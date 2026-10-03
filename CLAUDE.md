@@ -24,14 +24,14 @@ src/
   forms/              bottom sheets: Transaction (keypad + budget impact), Category (icon picker + subcategories), Budget, Recurring, CategoryDetail (usage by subcategory)
   components/         Sheet, BottomNav (centre + button), MonthNav, Bits (Progress, Pill, TxRow, Segmented, CategoryChips, Stat, Empty),
                       Icon/CategoryIcon + iconPaths.js (drawn icons), LineChart (forecast chart), SubcategoryPicker, SubcategoryEditor,
-                      TopBar (search + gear), SearchPalette (smart search), Splash (welcome), ExitDialog
-  hooks/              useBackHandler + useExitGuard (phone Back button), useCategories, useSubcategories, useMonthTransactions, useMonthData (everything a month screen derives, budget-scoped)
+                      TopBar (search + gear), SearchPalette (smart search), Splash (welcome), ExitDialog, InstallBanner, InstallGuide
+  hooks/              useInstall (InstallProvider: "use it as an app" prompt), useBackHandler + useExitGuard (phone Back button), useCategories, useSubcategories, useMonthTransactions, useMonthData (everything a month screen derives, budget-scoped)
   db/
     index.js          Dexie schema + versioned migrations (v1..v5)
     seed.js           default categories, icon keys, emoji -> icon normalisation
     actions.js        ALL writes live here (incl. moveBudget, runRecurring)
     backup.js         JSON export/import
-  lib/                PURE logic, no React, no DB, unit-tested: money, dates, recurring, summary, insights, subcategories, search, backStack, splash, theme
+  lib/                PURE logic, no React, no DB, unit-tested: money, dates, recurring, summary, insights, subcategories, search, backStack, splash, install, theme
   styles/             tokens.css (light; dark under :root[data-theme='dark']) · base.css · components.css
 e2e/                  smoke.cjs (browser test), fixture-backup.json + make-fixture.cjs (the design's sample month)
 scripts/make-icons.py regenerates public/icon-*.png (pure Python)
@@ -67,7 +67,8 @@ Rule of thumb: logic that can be pure goes in `lib/` with a test; DB writes go i
 17. **The phone's Back button never closes the app by surprise.** `useExitGuard` keeps history as `[root, guard]`; Back pops the guard and `lib/backStack` lets the newest open thing handle it first (sheet → Settings sub-page → leave a tab for Home → search panel). Anything that closes on Back must register with `useBackHandler` (`Sheet` already does). Only when nothing handles it does the "Exit Expenses?" dialog appear. Exit tries `window.close()`, then `history.back()`, then shows a hint (browsers may refuse to close a page). Don't add history entries elsewhere.
 18. **Search is a registry of items in `SearchPalette.buildItems`.** A new screen, setting or action must be added there with plain-language `keywords` (synonyms are what make it smart). Ranking lives in `lib/search.js` (typo-tolerant, every word must match). Search and the Settings gear live together in `TopBar`, always at the top, same height.
 19. **Welcome splash** shows once per browsing session (`lib/splash.js`); automated browsers skip it (`navigator.webdriver`) and `?splash=1` forces it. Don't block data loading on it.
-20. **Deploy base path is `/expense-tracker-/`** (`vite.config.js`). Reference public assets with `%BASE_URL%` in `index.html`, never bare `/`.
+20. **"Use it as an app" prompt** (`hooks/useInstall.jsx`, `lib/install.js`). Android/desktop Chrome: catch `beforeinstallprompt` at load (it fires once, maybe before React mounts), show our banner, call `prompt()` on tap. **iPhone has no web install API** — show the Share → Add to Home Screen how-to; never claim one-tap on iOS. In-app browsers (Facebook, Instagram, WebViews) cannot install: say to open the link in the real browser, with Copy link. The banner waits for the splash, hides once installed, and snoozes 14 days after "Not now"; Settings and search always keep "Install as an app". Automated browsers don't see the banner unless `?install=1`. The manifest must keep valid `any` and `maskable` icons, `id`, and `start_url`/`scope` under the base path, or browsers stop offering install.
+21. **Deploy base path is `/expense-tracker-/`** (`vite.config.js`). Reference public assets with `%BASE_URL%` in `index.html`, never bare `/`.
 
 ## Testing expectations
 - New logic in `lib/` → add cases to `src/lib/lib.test.js`.

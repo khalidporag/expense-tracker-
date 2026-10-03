@@ -13,6 +13,7 @@ import { formatMoney } from '../lib/money.js'
 import { shortDay, today } from '../lib/dates.js'
 import { getThemePref, setThemePref } from '../lib/theme.js'
 import { useBackHandler } from '../hooks/useBackHandler.js'
+import { useInstall } from '../hooks/useInstall.jsx'
 
 const Back = ({ onClick, children }) => (
   <div className="section-head">
@@ -135,6 +136,7 @@ const ITEMS = [['categories', 'tag', 'Categories'], ['recurring', 'repeat', 'Rec
 
 export default function More({ onBack, initialView = null }) {
   const [view, setView] = useState(initialView)
+  const { canInstall, installed, install } = useInstall()
   const back = () => setView(null)
   // The phone's Back button leaves a Settings sub-page for the Settings list.
   useBackHandler(() => { setView(null); return true }, view !== null)
@@ -147,6 +149,23 @@ export default function More({ onBack, initialView = null }) {
       <h1 className="title">Settings</h1>
       <Appearance />
       <ul className="list">
+        {canInstall && (
+          <li>
+            <button className="row-card" onClick={install}>
+              <span className="badge" style={{ width: 40, height: 40 }}><Icon name="phone" /></span>
+              <span className="grow"><strong>Install as an app</strong><span className="muted small">Opens full screen, works offline</span></span>
+              <Icon name="chevR" />
+            </button>
+          </li>
+        )}
+        {installed && (
+          <li>
+            <div className="row-card">
+              <span className="badge pos" style={{ width: 40, height: 40 }}><Icon name="check" /></span>
+              <span className="grow"><strong>Installed as an app</strong><span className="muted small">You’re using the installed version</span></span>
+            </div>
+          </li>
+        )}
         {ITEMS.map(([id, icon, label]) => (
           <li key={id}>
             <button className="row-card" onClick={() => setView(id)}>
