@@ -69,8 +69,8 @@ export default function History({ onEdit, preset }) {
       {all && (
         <section className="trio" aria-label="Totals for these entries">
           <Stat label="Entries">{shown.length}</Stat>
-          <Stat label="Spent">{formatMoney(sum.expense)}</Stat>
-          <Stat label="Income"><span className="pos">{formatMoney(sum.income)}</span></Stat>
+          <Stat label="Spent"><span className="money-out">{formatMoney(sum.expense)}</span></Stat>
+          <Stat label="Income"><span className="money-in">{formatMoney(sum.income)}</span></Stat>
         </section>
       )}
       {all && shown.length === 0 && <Empty icon="search">Nothing matches.</Empty>}
@@ -79,7 +79,7 @@ export default function History({ onEdit, preset }) {
         const net = g.items.reduce((s, t) => s + (t.type === 'income' ? t.amount : -t.amount), 0)
         return (
           <section key={g.date} aria-label={relativeDay(g.date)}>
-            <div className="day-head"><h2 style={{ font: 'inherit', margin: 0 }}>{relativeDay(g.date)}</h2><span className={net > 0 ? 'pos' : ''}>{net > 0 ? '+' : net < 0 ? '−' : ''}{formatMoney(Math.abs(net))}</span></div>
+            <div className="day-head"><h2 style={{ font: 'inherit', margin: 0 }}>{relativeDay(g.date)}</h2><span className={net > 0 ? 'money-in' : net < 0 ? 'money-out' : ''}>{net > 0 ? '+' : net < 0 ? '−' : ''}{formatMoney(Math.abs(net))}</span></div>
             <ul className="list">{g.items.map((t) => <TxRow key={t.id} tx={t} category={byId.get(t.categoryId)} sub={subById.get(t.subcategoryId)} onClick={() => onEdit(t)} />)}</ul>
           </section>
         )

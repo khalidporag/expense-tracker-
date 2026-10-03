@@ -256,7 +256,7 @@ function Biggest({ d }) {
               <div style={{ fontWeight: 600 }}>{tx.note || subById.get(tx.subcategoryId)?.name || byId.get(tx.categoryId)?.name}</div>
               <div className="muted small">{byId.get(tx.categoryId)?.name}{subById.get(tx.subcategoryId) ? ` › ${subById.get(tx.subcategoryId).name}` : ''} · {shortDay(tx.date)}{tx.recurringId ? ' · recurring' : ''}</div>
             </div>
-            <div style={{ textAlign: 'right' }}><div style={{ fontWeight: 700 }}>{formatMoney(tx.amount)}</div><div className="muted small">{Math.round(s * 100)}%</div></div>
+            <div style={{ textAlign: 'right' }}><div className="money-out" style={{ fontWeight: 700 }}>{formatMoney(tx.amount)}</div><div className="muted small">{Math.round(s * 100)}%</div></div>
           </div>
         ))}
       </div>

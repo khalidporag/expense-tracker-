@@ -49,8 +49,8 @@ select.chip { width: auto; appearance: none; padding-right: 14px; }
 .badge.pos { background: var(--blue-tint); color: var(--blue-ink); }
 .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .row-card { width: 100%; display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; text-align: left; }
-.row-card .amt { font-weight: 700; white-space: nowrap; }
-.row-card .amt.in { color: var(--blue-ink); }
+.row-card .amt { font-weight: 700; white-space: nowrap; color: var(--out-ink); }
+.row-card .amt.in { color: var(--in-ink); }
 .row-card strong { font-weight: 600; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .day-head { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 2px 6px; font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
 .divided > * { border-bottom: 1px solid var(--soft); }
