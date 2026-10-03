@@ -20,7 +20,7 @@ export default defineConfig({
         start_url: base,
         scope: base,
         display: 'standalone',
-        background_color: '#f4f4f1',
+        background_color: '#14161a', // matches the in-app welcome splash
         theme_color: '#f4f4f1',
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },

@@ -7,10 +7,10 @@ import { db } from '../db/index.js'
 import { saveCategory, deleteCategory } from '../db/actions.js'
 import { CATEGORY_ICON_KEYS, normalizeIcon } from '../db/seed.js'
 
-export default function CategoryForm({ initial, onClose }) {
+export default function CategoryForm({ initial, defaultKind, onClose }) {
   const [name, setName] = useState(initial?.name || '')
   const [icon, setIcon] = useState(normalizeIcon(initial?.icon || 'tag'))
-  const [kind, setKind] = useState(initial?.kind || 'expense')
+  const [kind, setKind] = useState(initial?.kind || defaultKind || 'expense')
   const valid = name.trim().length > 0
 
   const submit = async (e) => {

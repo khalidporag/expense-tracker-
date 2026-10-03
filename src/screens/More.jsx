@@ -12,6 +12,7 @@ import { nextDue } from '../lib/recurring.js'
 import { formatMoney } from '../lib/money.js'
 import { shortDay, today } from '../lib/dates.js'
 import { getThemePref, setThemePref } from '../lib/theme.js'
+import { useBackHandler } from '../hooks/useBackHandler.js'
 
 const Back = ({ onClick, children }) => (
   <div className="section-head">
@@ -24,25 +25,27 @@ function Categories({ onBack }) {
   const { list } = useCategories()
   const { byCategory } = useSubcategories()
   const [editing, setEditing] = useState(null) // category | 'new'
+  const [kind, setKind] = useState('expense')
+  const count = (k) => list.filter((c) => c.kind === k).length
   return (
     <div className="stack tight">
-      <Back onClick={onBack}><button className="link" onClick={() => setEditing('new')}>+ Add</button></Back>
+      <Back onClick={onBack} />
       <h1 className="title">Categories</h1>
-      {['expense', 'income'].map((kind) => (
-        <section key={kind} className="stack tight">
-          <h2 className="h2">{kind === 'expense' ? 'Expense' : 'Income'}</h2>
-          <ul className="list">
-            {list.filter((c) => c.kind === kind).map((c) => (
-              <li key={c.id}>
-                <button className="row-card" onClick={() => setEditing(c)} aria-label={`Edit ${c.name}`}>
-                  <CategoryIcon category={c} tone={kind === 'income' ? 'pos' : ''} /><span className="grow"><strong>{c.name}</strong>{(byCategory.get(c.id) || []).length > 0 && <span className="muted small">{byCategory.get(c.id).map((x) => x.name).join(', ')}</span>}</span><span className="muted small">Edit</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
-      {editing && <CategoryForm initial={editing === 'new' ? undefined : editing} onClose={() => setEditing(null)} />}
+      <Segmented label="Category type" value={kind} onChange={setKind}
+        options={[{ value: 'expense', label: `Expense (${count('expense')})` }, { value: 'income', label: `Income (${count('income')})` }]} />
+      <button className="btn lg ink block" onClick={() => setEditing('new')}><Icon name="plus" size={20} stroke={2.2} />New {kind} category</button>
+      <ul className="list" aria-label={`${kind === 'expense' ? 'Expense' : 'Income'} categories`}>
+        {list.filter((c) => c.kind === kind).map((c) => (
+          <li key={c.id}>
+            <button className="row-card" onClick={() => setEditing(c)} aria-label={`Edit ${c.name}`}>
+              <CategoryIcon category={c} tone={kind === 'income' ? 'pos' : ''} />
+              <span className="grow"><strong>{c.name}</strong>{(byCategory.get(c.id) || []).length > 0 && <span className="muted small">{byCategory.get(c.id).map((x) => x.name).join(', ')}</span>}</span>
+              <span className="muted small">Edit</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      {editing && <CategoryForm initial={editing === 'new' ? undefined : editing} defaultKind={kind} onClose={() => setEditing(null)} />}
     </div>
   )
 }
@@ -133,6 +136,8 @@ const ITEMS = [['categories', 'tag', 'Categories'], ['recurring', 'repeat', 'Rec
 export default function More({ onBack, initialView = null }) {
   const [view, setView] = useState(initialView)
   const back = () => setView(null)
+  // The phone's Back button leaves a Settings sub-page for the Settings list.
+  useBackHandler(() => { setView(null); return true }, view !== null)
   if (view === 'categories') return <Categories onBack={back} />
   if (view === 'recurring') return <Recurring onBack={back} />
   if (view === 'backup') return <Backup onBack={back} />
