@@ -199,8 +199,8 @@ export default function Home({ month, onMonth, onEdit, onDetail, go }) {
       </div>
       <Hero d={d} go={go} />
       <section className="trio" aria-label="Month totals">
-        <Stat label="Income"><span className="pos">{formatMoney(summary.income)}</span></Stat>
-        <Stat label="Spent">{formatMoney(summary.expense)}</Stat>
+        <Stat label="Income"><span className="money-in">{formatMoney(summary.income)}</span></Stat>
+        <Stat label="Spent"><span className="money-out">{formatMoney(summary.expense)}</span></Stat>
         <Stat label="Kept">{formatMoney(summary.balance)}</Stat>
       </section>
       <Actions d={d} go={go} />

@@ -22,5 +22,7 @@ input[type='checkbox'] { width: auto; }
 .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .fig { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .pos { color: var(--blue-ink); }
+.money-in { color: var(--in-ink); }
+.money-out { color: var(--out-ink); }
 .warn-ink { color: var(--amber-ink); }
 .over-ink { color: var(--orange-ink); }

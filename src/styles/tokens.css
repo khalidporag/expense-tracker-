@@ -20,6 +20,9 @@
   --amber-ink: #7a4b00;
   --amber-tint: #fff1d6;
   --track: #e3e6ec;
+  /* money: income green, expense red (always shown with a +/− sign too) */
+  --in-ink: #15803d;
+  --out-ink: #b91c1c;
 
   --btn-bg: #14161a;
   --btn-fg: #ffffff;
@@ -70,6 +73,8 @@
   --amber-ink: #f6c877;
   --amber-tint: #33270f;
   --track: #263044;
+  --in-ink: #4ade80;
+  --out-ink: #f87171;
 
   --btn-bg: #e8ecf2;
   --btn-fg: #0b0f17;

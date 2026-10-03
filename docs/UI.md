@@ -36,7 +36,7 @@ Expense/Income toggle → large amount with a **built-in keypad** (no system key
 
 ## Visual rules
 - Money shows as `৳1,234` (poisha only when non-zero); allowances and forecasts are rounded to whole taka.
-- Expenses neutral with `−`, income blue with `+`; negative values use `−৳`.
-- State is never colour alone: pills and text say "Over by", "left", "On track"; over-budget bars are hatched.
+- **Income amounts are green with `+`, expense amounts red with `−`** (font colour; tokens `--in-ink` / `--out-ink`, both themes). Applies to entries, Income/Spent totals and History day nets; budget progress, trend deltas and *Kept* keep their own colours. Negative values use `−৳`.
+- State is never colour alone: pills and text say "Over by", "left", "On track"; over-budget bars are hatched; money keeps its `+` / `−` sign.
 - Colours only via CSS variables in `tokens.css`; both themes keep text contrast ≥ 4.5:1. Tap targets ≥ 44px (chips 40px).
 - Empty states: one icon + one helpful sentence.
