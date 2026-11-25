@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import Sheet from '../components/Sheet.jsx'
 import SubAdder from '../components/SubAdder.jsx'
 import { useSubcategories } from '../hooks/useSubcategories.js'
-import { setBudget, setSubLimit, addSubcategories } from '../db/actions.js'
+import { setBudget, saveBudgetWithSubLimits, addSubcategories } from '../db/actions.js'
 import { toMinor, toInput, formatMoney } from '../lib/money.js'
 
 // `budget` may be undefined (no limit yet). Subcategory limits are optional shares of the category limit.
@@ -21,15 +21,16 @@ export default function BudgetForm({ category, budget, onClose }) {
   const changeSub = (s, text) => {
     const next = { ...subLimits, [s.id]: text }
     setSubLimits(next)
-    const total = subs.reduce((sum, x) => { const t = next[x.id] ?? (x.limit > 0 ? toInput(x.limit) : ''); return sum + (t ? toMinor(t) : 0) }, 0)
-    if (total > 0) setLimit(toInput(total))
+    const totalOf = (m) => subs.reduce((sum, x) => { const t = m[x.id] ?? (x.limit > 0 ? toInput(x.limit) : ''); return sum + (t ? toMinor(t) : 0) }, 0)
+    const total = totalOf(next)
+    // Follow the total while the budget is empty or still equals the previous total; a budget raised on purpose stays.
+    if (total > 0 && (minor === 0 || minor === allocated || allocated === 0)) setLimit(toInput(total))
   }
 
   const submit = async (e) => {
     e.preventDefault()
     if (!(minor > 0)) return
-    await setBudget(category.id, minor)
-    for (const s of subs) if (subMinor(s) !== (s.limit || 0)) await setSubLimit(s.id, subMinor(s))
+    await saveBudgetWithSubLimits(category.id, minor, subs.filter((s) => subMinor(s) !== (s.limit || 0)).map((s) => [s.id, subMinor(s)]))
     onClose()
   }
   const remove = async () => {

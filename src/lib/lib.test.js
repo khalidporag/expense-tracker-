@@ -439,6 +439,10 @@ describe('review fixes', () => {
     expect(dueDates(rule, '2026-07-10')).toHaveLength(6)
     expect(skipMissed(rule, '2026-07-10')).toBe('2026-07-05')
     expect(dueDates({ ...rule, lastGenerated: skipMissed(rule, '2026-07-10') }, '2026-07-10')).toEqual([])
+    // switched back on the very day it falls due: skip up to yesterday, so today's entry is still created
+    const lg = skipMissed({ ...rule, lastGenerated: '2026-01-05' }, '2026-11-04')
+    expect(lg).toBe('2026-10-05')
+    expect(dueDates({ ...rule, lastGenerated: lg }, '2026-11-05')).toEqual(['2026-11-05'])
     expect(skipMissed({ ...rule, lastGenerated: '2026-07-05' }, '2026-07-10')).toBe('2026-07-05')
   })
 })

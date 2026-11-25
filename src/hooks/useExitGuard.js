@@ -36,7 +36,7 @@ export function useExitGuard() {
       setTimeout(() => {
         exiting.current = false
         setHint(true)
-        setTimeout(() => setHint(false), 4500)
+        setTimeout(() => { setHint(false); history.pushState({ guard: true }, '') }, 4500) // guard back, so Back keeps closing sheets
       }, 150)
     }, 900)
   }, [])

@@ -1,5 +1,6 @@
 import { db } from './index.js'
 import { normalizeIcon } from './seed.js'
+import { MAX_MINOR } from '../lib/money.js'
 
 const REQUIRED = ['categories', 'transactions', 'budgets', 'recurring']
 const OPTIONAL = ['subcategories', 'plans', 'deposits', 'settings'] // older backups have none of these
@@ -8,7 +9,7 @@ const PLAN_KINDS = ['dps', 'lump', 'goal']
 const FORMAT = 'expense-tracker-backup'
 
 // ---- full validation (nothing is written until every row has passed) ----
-const isMoney = (n) => Number.isSafeInteger(n) && n > 0
+const isMoney = (n) => Number.isSafeInteger(n) && n > 0 && n <= MAX_MINOR // the same range the forms accept
 const isDate = (d) => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)
 const KINDS = ['expense', 'income']
 function validateRows(data) {
@@ -66,7 +67,9 @@ export async function importBackup(text) {
   // Keep only well-formed subcategories under existing categories; drop dangling labels from entries and rules.
   const catIds = new Set(data.categories.map((c) => c.id))
   data.subcategories = data.subcategories.filter((s) => s && s.name && catIds.has(s.categoryId))
-  data.subcategories = data.subcategories.map(({ limit, ...s }) => (Number.isInteger(limit) && limit > 0 ? { ...s, limit } : s)) // keep only a valid subcategory budget
+  // A subcategory limit is a share of its category budget: keep it only if it is valid and that category has a budget.
+  const budgeted = new Set(data.budgets.map((b) => b.categoryId))
+  data.subcategories = data.subcategories.map(({ limit, ...s }) => (isMoney(limit) && budgeted.has(s.categoryId) ? { ...s, limit } : s))
   const subIds = new Set(data.subcategories.map((s) => s.id))
   const clean = (row) => {
     if (row.subcategoryId == null || subIds.has(row.subcategoryId)) return row
@@ -78,7 +81,7 @@ export async function importBackup(text) {
   // Savings: keep only well-formed plans, deposits that belong to a kept plan, and settings with a key.
   data.plans = data.plans.filter((p) => p && p.name && PLAN_KINDS.includes(p.kind) && typeof p.startDate === 'string' && p.termMonths > 0)
   const planIds = new Set(data.plans.map((p) => p.id))
-  data.deposits = data.deposits.filter((d) => d && planIds.has(d.planId) && typeof d.date === 'string' && d.amount > 0)
+  data.deposits = data.deposits.filter((d) => d && planIds.has(d.planId) && isDate(d.date) && isMoney(d.amount))
   data.settings = data.settings.filter((s) => s && typeof s.key === 'string')
   await db.transaction('rw', TABLES.map((t) => db[t]), async () => {
     for (const t of TABLES) {

@@ -3,7 +3,7 @@ const whole = new Intl.NumberFormat('en-BD', { maximumFractionDigits: 0 })
 const cents = new Intl.NumberFormat('en-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 // Largest amount we accept: ৳100 billion. Anything bigger, or not a number, becomes 0 so forms treat it as invalid.
-const MAX_MINOR = 1e13
+export const MAX_MINOR = 1e13
 export const toMinor = (value) => {
   const minor = Math.round(parseFloat(value) * 100)
   return Number.isSafeInteger(minor) && Math.abs(minor) <= MAX_MINOR ? minor : 0

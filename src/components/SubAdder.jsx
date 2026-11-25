@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import Icon from './Icon.jsx'
 import { parseSubNames, subSuggestions } from '../lib/subcategories.js'
 
@@ -6,16 +6,23 @@ import { parseSubNames, subSuggestions } from '../lib/subcategories.js'
 export default function SubAdder({ categoryName, existing, onAdd }) {
   const [text, setText] = useState('')
   const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+  const busy = useRef(false) // a double tap, or Add then Enter, must not save twice
   const names = parseSubNames(text, existing)
   const dupes = text.trim() && names.length === 0
   const add = async (list) => {
-    if (!list.length) return
+    if (!list.length || busy.current) return
+    busy.current = true
+    setSaving(true)
     try {
       await onAdd(list)
       setText('')
       setError('')
     } catch (err) {
       setError(`Could not save: ${err?.message || err}`) // never fail silently
+    } finally {
+      busy.current = false
+      setSaving(false)
     }
   }
   // On a phone, tapping a button first blurs the text box; the keyboard closes, the sheet shifts and the tap can miss.
@@ -27,7 +34,7 @@ export default function SubAdder({ categoryName, existing, onAdd }) {
       <div className="row">
         <input className="field" placeholder="e.g. Electricity, Gas" aria-label="New subcategory" value={text} maxLength={120}
           onChange={(e) => setText(e.target.value)} enterKeyHint="done" onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(names) } }} />
-        <button type="button" className="btn blue" disabled={!names.length} onMouseDown={keepFocus} onClick={() => add(names)}>
+        <button type="button" className="btn blue" disabled={!names.length || saving} onMouseDown={keepFocus} onClick={() => add(names)}>
           {names.length > 1 ? `Add ${names.length}` : 'Add'}
         </button>
       </div>
