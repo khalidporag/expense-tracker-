@@ -45,7 +45,7 @@ export default function History({ onEdit, preset }) {
 
       <div className="chips scroll" role="group" aria-label="Filters">
         {[['', 'All'], ['expense', 'Expenses'], ['income', 'Income']].map(([v, label]) => (
-          <button key={label} className={f.type === v ? 'chip on' : 'chip'} aria-pressed={f.type === v} onClick={() => set({ type: v, categoryId: null })}>{label}</button>
+          <button key={label} className={f.type === v ? 'chip on' : 'chip'} aria-pressed={f.type === v} onClick={() => set({ type: v, categoryId: null, subcategoryId: null })}>{label}</button>
         ))}
         <select className={f.categoryId != null ? 'chip on' : 'chip'} aria-label="Category" value={f.categoryId ?? ''} onChange={(e) => set({ categoryId: e.target.value === '' ? null : Number(e.target.value), subcategoryId: null })}>
           <option value="">Category</option>

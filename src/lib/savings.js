@@ -164,10 +164,10 @@ export function savingsSignals({ plans, deposits, todayISO, target, saved, kept 
   const maturing = []
   for (const p of plans.filter((x) => x.active !== false)) {
     const s = planStatus(p, deposits, todayISO)
-    if (s.dueDate) due.push({ name: p.name, amount: p.installment || 0, dueDate: s.dueDate, overdue: s.overdue, days: daysBetween(todayISO, s.dueDate) })
+    if (s.dueDate) due.push({ id: p.id, name: p.name, amount: p.installment || 0, dueDate: s.dueDate, overdue: s.overdue, days: daysBetween(todayISO, s.dueDate) })
     if (s.state === 'running') {
       const days = daysBetween(todayISO, s.maturityDate)
-      if (days <= 60) maturing.push({ name: p.name, date: s.maturityDate, days, amount: projection(p).total })
+      if (days <= 60) maturing.push({ id: p.id, name: p.name, date: s.maturityDate, days, amount: projection(p).total })
     }
   }
   return { target, saved, kept, due, maturing }

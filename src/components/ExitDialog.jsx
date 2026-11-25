@@ -1,7 +1,9 @@
 import React, { useEffect, useRef } from 'react'
+import { useBackHandler } from '../hooks/useBackHandler.js'
 
 export default function ExitDialog({ onStay, onExit }) {
   const stayRef = useRef()
+  useBackHandler(() => { onStay(); return true }) // a second Back press means Stay, never a surprise exit
   useEffect(() => {
     stayRef.current?.focus()
     const onKey = (e) => e.key === 'Escape' && onStay()

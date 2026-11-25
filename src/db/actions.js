@@ -1,6 +1,6 @@
 import { db } from './index.js'
-import { dueDates } from '../lib/recurring.js'
-import { today } from '../lib/dates.js'
+import { dueDates, skipMissed } from '../lib/recurring.js'
+import { today, addDays } from '../lib/dates.js'
 import { defaultCategories } from './seed.js'
 
 // ---- transactions ----
@@ -60,13 +60,21 @@ export async function setBudget(categoryId, limit) {
   return existing ? db.budgets.update(existing.id, { limit }) : db.budgets.add({ categoryId, limit })
 }
 
-// Optional monthly limit on a subcategory (a share of its category's budget). 0 / empty removes it.
-export const setSubLimit = (id, limit) =>
-  db.subcategories.where(':id').equals(id).modify((s) => { if (limit > 0) s.limit = limit; else delete s.limit })
+// The category budget and its changed subcategory limits are written together, or not at all.
+export const saveBudgetWithSubLimits = (categoryId, limit, subLimits) =>
+  db.transaction('rw', db.budgets, db.subcategories, async () => {
+    const existing = await db.budgets.where('categoryId').equals(categoryId).first()
+    await (existing ? db.budgets.update(existing.id, { limit }) : db.budgets.add({ categoryId, limit }))
+    for (const [id, l] of subLimits) await db.subcategories.where(':id').equals(id).modify((s) => { if (l > 0) s.limit = l; else delete s.limit })
+  })
 
 // Adds several subcategories at once (names already de-duplicated by the caller). Returns their ids.
 export const addSubcategories = (categoryId, names) =>
-  db.transaction('rw', db.subcategories, () => Promise.all(names.map((name) => db.subcategories.add({ categoryId, name }))))
+  db.transaction('rw', db.subcategories, async () => {
+    const have = new Set((await db.subcategories.where('categoryId').equals(categoryId).toArray()).map((s) => s.name.toLowerCase()))
+    const fresh = names.filter((n) => !have.has(n.toLowerCase()) && have.add(n.toLowerCase())) // also drops repeats within `names`
+    return Promise.all(fresh.map((name) => db.subcategories.add({ categoryId, name })))
+  })
 
 // Shifts monthly budget from one category to another (the donor keeps at least ৳1).
 export async function moveBudget(fromId, toId, amount) {
@@ -104,6 +112,9 @@ export const deleteDeposit = (id) => db.deposits.delete(id)
 
 // ---- recurring ----
 export async function saveRecurring(r) {
+  const before = r.id ? await db.recurring.get(r.id) : null
+  // Switching a paused rule back on must not create every occurrence it missed while paused.
+  if (before && !before.active && r.active) r = { ...r, lastGenerated: skipMissed(r, addDays(today(), -1)) } // an occurrence due today is still created
   await (r.id ? db.recurring.put(r) : db.recurring.add({ ...r, lastGenerated: null }))
   await runRecurring() // a rule starting today or in the past takes effect immediately
 }

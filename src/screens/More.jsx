@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import Icon, { CategoryIcon } from '../components/Icon.jsx'
 import { Empty, Segmented } from '../components/Bits.jsx'
@@ -12,7 +12,7 @@ import { clearData } from '../db/actions.js'
 import { nextDue } from '../lib/recurring.js'
 import { formatMoney } from '../lib/money.js'
 import { shortDay, today } from '../lib/dates.js'
-import { getThemePref, setThemePref } from '../lib/theme.js'
+import { getThemePref, setThemePref, THEME_EVENT } from '../lib/theme.js'
 import { useBackHandler } from '../hooks/useBackHandler.js'
 import { useInstall } from '../hooks/useInstall.jsx'
 
@@ -161,6 +161,12 @@ function CleanData({ onBack }) {
 
 function Appearance() {
   const [pref, setPref] = useState(getThemePref())
+  // The theme can also be changed from search while Settings is open.
+  useEffect(() => {
+    const sync = () => setPref(getThemePref())
+    window.addEventListener(THEME_EVENT, sync)
+    return () => window.removeEventListener(THEME_EVENT, sync)
+  }, [])
   const choose = (v) => { setThemePref(v); setPref(v) }
   return (
     <section className="card sm stack tight" aria-label="Appearance">
