@@ -20,7 +20,7 @@ React 18 · Vite 5 · Dexie (IndexedDB) + dexie-react-hooks · vite-plugin-pwa �
 src/
   main.jsx            entry (imports bundled fonts + styles)
   App.jsx             shell: tab state, selected month, add/edit sheet, `go(tab, opts)` navigation, runs recurring on open
-  screens/            Home, History, Insights, Plan (= Budgets + Savings, segmented), More (+ Categories/Recurring/Backup sub-views)
+  screens/            Home, History, Insights, Plan (= Budgets + Savings, segmented), More (+ Categories/Recurring/Backup/Clean data sub-views)
   forms/              bottom sheets: Transaction (keypad + budget impact), Category (icon picker + subcategories), Budget, Recurring, CategoryDetail (usage by subcategory), PlanForm / PlanDetail / SavingsTargetForm / MonthReport (savings)
   components/         Sheet, BottomNav (centre + button), MonthNav, Bits (Progress, Pill, TxRow, Segmented, CategoryChips, Stat, Empty),
                       Icon/CategoryIcon + iconPaths.js (drawn icons), LineChart (forecast chart), SubcategoryPicker, SubcategoryEditor,
@@ -29,7 +29,7 @@ src/
   db/
     index.js          Dexie schema + versioned migrations (v1..v6)
     seed.js           default categories, icon keys, emoji -> icon normalisation
-    actions.js        ALL writes live here (incl. moveBudget, runRecurring)
+    actions.js        ALL writes live here (incl. moveBudget, runRecurring, clearData)
     backup.js         JSON export/import
   lib/                PURE logic, no React, no DB, unit-tested: money, dates, recurring, summary, insights, subcategories, search, backStack, splash, install, savings, theme
   styles/             tokens.css (light; dark under :root[data-theme='dark']) · base.css · components.css
