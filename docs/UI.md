@@ -49,7 +49,7 @@ Opened from a Home breakdown row. Month total with change vs last month (same da
 ### More
 Settings: **Appearance** (System / Light / Dark) → Categories, Recurring, Backup & restore.
 
-**Categories** has **Expense / Income tabs** (with counts) and a full-width *New expense/income category* button at the top, so adding to either list never needs scrolling; a new category opens on the tab you are viewing. Expense categories also manage their subcategories (add, rename, delete) and the icon picker.
+**Categories** has **Expense / Income tabs** (with counts) and a full-width *New expense/income category* button at the top, so adding to either list never needs scrolling; a new category opens on the tab you are viewing. Expense categories also manage their subcategories (add several at once with commas, one-tap suggestion chips such as Electricity/Gas under Bills, rename, delete; a *new* category collects them before it is saved) and the icon picker. In the **budget sheet** each subcategory can get an optional monthly limit, a share of the category limit: the sheet says in words how much is split or by how much it is over, and the Plan card lists each limit with its own progress bar.
 
 ## Add / edit entry (sheet)
 Expense/Income toggle → large amount with a **built-in keypad** (no system keyboard; physical digits and Backspace also work) → live **budget impact** line ("Food would be ৳2,950 over budget…") → categories ranked by recent use → optional **subcategory** chips for expenses (with inline *New*; tap again to clear) → *Repeat* chips from recent entries → date (relative label, native picker) and optional note → Save (states the amount). Edit adds Delete. Save is disabled until amount > 0.

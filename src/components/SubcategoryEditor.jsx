@@ -2,7 +2,8 @@ import React, { useState } from 'react'
 import Icon from './Icon.jsx'
 import { useSubcategories } from '../hooks/useSubcategories.js'
 import { db } from '../db/index.js'
-import { saveSubcategory, deleteSubcategory } from '../db/actions.js'
+import SubAdder from './SubAdder.jsx'
+import { saveSubcategory, deleteSubcategory, addSubcategories } from '../db/actions.js'
 
 function SubRow({ sub }) {
   const [name, setName] = useState(sub.name)
@@ -25,26 +26,36 @@ function SubRow({ sub }) {
   )
 }
 
-// Manage the subcategories of one expense category (inside the category sheet).
+const Intro = ({ name }) => <p className="muted small">Split {name} into parts, such as Electricity and Gas. You can give each part its own monthly limit from the {name} budget.</p>
+
+// Manage the subcategories of one saved expense category (inside the category sheet).
 export default function SubcategoryEditor({ category }) {
   const { byCategory } = useSubcategories()
   const subs = byCategory.get(category.id) || []
-  const [name, setName] = useState('')
-  const add = async () => {
-    const n = name.trim()
-    if (n && !subs.some((s) => s.name.toLowerCase() === n.toLowerCase())) await saveSubcategory({ categoryId: category.id, name: n })
-    setName('')
-  }
   return (
     <section className="stack tight" aria-label="Subcategories" style={{ borderTop: '1px solid var(--soft)', paddingTop: 14 }}>
       <div className="eyebrow">Subcategories</div>
-      <p className="muted small">Split {category.name} into parts, such as Electricity and Gas. Budgets stay on {category.name}; subcategories add detail to its usage.</p>
+      <Intro name={category.name} />
       {subs.map((s) => <SubRow key={s.id} sub={s} />)}
-      <div className="row">
-        <input className="field" placeholder="New subcategory" aria-label="New subcategory" value={name} onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add() } }} />
-        <button type="button" className="btn blue" disabled={!name.trim()} onClick={add}>Add</button>
-      </div>
+      <SubAdder categoryName={category.name} existing={subs.map((s) => s.name)} onAdd={(names) => addSubcategories(category.id, names)} />
+    </section>
+  )
+}
+
+// Same section for a category that is not saved yet: names are collected and saved together with the category.
+export function SubcategoryDraft({ categoryName, names, onChange }) {
+  return (
+    <section className="stack tight" aria-label="Subcategories" style={{ borderTop: '1px solid var(--soft)', paddingTop: 14 }}>
+      <div className="eyebrow">Subcategories (optional)</div>
+      <Intro name={categoryName.trim() || 'this category'} />
+      {names.length > 0 && (
+        <div className="chips wrap" aria-label="Subcategories to add">
+          {names.map((n) => (
+            <span key={n} className="chip on">{n}<button type="button" className="icon-btn" style={{ minWidth: 24, minHeight: 24, color: 'inherit' }} aria-label={`Remove ${n}`} onClick={() => onChange(names.filter((x) => x !== n))}><Icon name="close" size={14} stroke={2.4} /></button></span>
+          ))}
+        </div>
+      )}
+      <SubAdder categoryName={categoryName} existing={names} onAdd={(list) => onChange([...names, ...list])} />
     </section>
   )
 }

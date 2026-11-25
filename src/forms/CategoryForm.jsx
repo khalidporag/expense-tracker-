@@ -2,21 +2,23 @@ import React, { useState } from 'react'
 import Sheet from '../components/Sheet.jsx'
 import Icon from '../components/Icon.jsx'
 import { Segmented } from '../components/Bits.jsx'
-import SubcategoryEditor from '../components/SubcategoryEditor.jsx'
+import SubcategoryEditor, { SubcategoryDraft } from '../components/SubcategoryEditor.jsx'
 import { db } from '../db/index.js'
-import { saveCategory, deleteCategory } from '../db/actions.js'
+import { saveCategory, deleteCategory, addSubcategories } from '../db/actions.js'
 import { CATEGORY_ICON_KEYS, normalizeIcon } from '../db/seed.js'
 
 export default function CategoryForm({ initial, defaultKind, onClose }) {
   const [name, setName] = useState(initial?.name || '')
   const [icon, setIcon] = useState(normalizeIcon(initial?.icon || 'tag'))
   const [kind, setKind] = useState(initial?.kind || defaultKind || 'expense')
+  const [draftSubs, setDraftSubs] = useState([])
   const valid = name.trim().length > 0
 
   const submit = async (e) => {
     e.preventDefault()
     if (!valid) return
-    await saveCategory({ ...initial, name: name.trim(), icon, kind })
+    const id = await saveCategory({ ...initial, name: name.trim(), icon, kind })
+    if (!initial && kind === 'expense' && draftSubs.length) await addSubcategories(id, draftSubs)
     onClose()
   }
   const remove = async () => {
@@ -44,6 +46,7 @@ export default function CategoryForm({ initial, defaultKind, onClose }) {
             </button>
           ))}
         </div>
+        {!initial && kind === 'expense' && <SubcategoryDraft categoryName={name} names={draftSubs} onChange={setDraftSubs} />}
         <div className="btn-row">
           {initial && !initial.system && <button type="button" className="btn lg danger" onClick={remove}>Delete</button>}
           <button type="submit" className="btn lg blue" disabled={!valid}>Save</button>
@@ -51,7 +54,6 @@ export default function CategoryForm({ initial, defaultKind, onClose }) {
         {initial?.system && <p className="muted small">"Other" can be renamed but not deleted. It receives entries from deleted categories.</p>}
       </form>
       {initial?.kind === 'expense' && <SubcategoryEditor category={initial} />}
-      {!initial && kind === 'expense' && <p className="muted small">After saving, open this category again to add subcategories (for example Electricity and Gas under Utility bills).</p>}
     </Sheet>
   )
 }
