@@ -563,6 +563,23 @@ const ok = (c, m) => { if (c) console.log('✓', m); else { console.log('✗ FAI
   await expectText('[role=status]', /restored/, 'backup: the export restores savings plans again')
   ok((await idb('plans')).length === 3 && (await idb('deposits')).length === 16, 'backup: round trip keeps 3 plans and 16 deposits')
   await page.click('button:has-text("Back")')
+
+  // clean data: scoped clears, then everything; the sample month is restored afterwards
+  await page.click('.row-card:has-text("Clean data")')
+  await noOverflow('Settings > Clean data')
+  const cats0 = (await idb('categories')).length
+  await page.click('.row-card:has-text("Clear all entries")')
+  await expectText('[role=status]', /cleared/, 'clean data: entries clear')
+  ok((await idb('transactions')).length === 0 && (await idb('plans')).length === 3 && (await idb('categories')).length === cats0, 'clean data: entries only (savings and categories stay)')
+  await page.click('.row-card:has-text("Clear savings plans")')
+  ok((await idb('plans')).length === 0 && (await idb('deposits')).length === 0 && !(await idb('settings')).some((x) => x.key === 'savingsTarget'), 'clean data: savings plans, deposits and target cleared')
+  await page.click('.row-card:has-text("Clear everything")')
+  ok((await idb('budgets')).length === 0 && (await idb('recurring')).length === 0 && (await idb('categories')).length > 0 && (await idb('categories')).some((c) => c.system), 'clean data: everything resets to fresh-install categories')
+  await page.click('button:has-text("Back")')
+  await page.click('.row-card:has-text("Backup")')
+  await page.setInputFiles('input[type=file]', exportPath)
+  await expectText('[role=status]', /restored/, 'clean data: sample month restored from backup')
+  await page.click('button:has-text("Back")')
   await page.click('button:has-text("Back")')
 
   // --- past month view ---

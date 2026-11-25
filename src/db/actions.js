@@ -1,6 +1,7 @@
 import { db } from './index.js'
 import { dueDates } from '../lib/recurring.js'
 import { today } from '../lib/dates.js'
+import { defaultCategories } from './seed.js'
 
 // ---- transactions ----
 export const saveTransaction = (t) => (t.id ? db.transactions.put(t) : db.transactions.add(t))
@@ -114,4 +115,26 @@ export async function runRecurring(upTo = today()) {
       await db.recurring.update(rule.id, { lastGenerated: dates[dates.length - 1] })
     }
   })
+}
+
+// ---- clean data ----
+// 'entries' = every income/expense entry; 'savings' = plans, deposits and the savings target;
+// 'all' = everything, back to a fresh install (default categories). Categories, budgets and rules survive the smaller scopes.
+export async function clearData(scope) {
+  if (scope === 'entries') return db.transactions.clear()
+  if (scope === 'savings') {
+    return db.transaction('rw', db.plans, db.deposits, db.settings, async () => {
+      await db.plans.clear()
+      await db.deposits.clear()
+      await db.settings.delete('savingsTarget')
+    })
+  }
+  if (scope === 'all') {
+    const tables = [db.transactions, db.categories, db.subcategories, db.budgets, db.recurring, db.plans, db.deposits, db.settings]
+    return db.transaction('rw', tables, async () => {
+      for (const t of tables) await t.clear()
+      await db.categories.bulkAdd(defaultCategories())
+    })
+  }
+  throw new Error(`Unknown clean-data scope: ${scope}`)
 }

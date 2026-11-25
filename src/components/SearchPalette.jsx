@@ -30,6 +30,7 @@ function buildItems({ cats, subs, ctx }) {
     setting('categories', 'Categories', 'tag', 'categories', ['category', 'subcategory', 'subcategories', 'labels', 'groups', 'icons', 'new category', 'add category', 'utility']),
     setting('recurring', 'Recurring', 'repeat', 'recurring', ['subscription', 'repeat', 'rent', 'salary', 'monthly', 'weekly', 'automatic', 'bills']),
     setting('backup', 'Backup & restore', 'download', 'backup', ['export', 'import', 'download', 'upload', 'restore', 'save data', 'json', 'safety', 'copy']),
+    setting('clean', 'Clean data', 'trash', 'clean', ['delete', 'erase', 'clear', 'reset', 'wipe', 'remove all', 'start over', 'fresh']),
     { id: 'appearance', title: 'Appearance', group: 'Settings', icon: 'sliders', keywords: ['theme', 'dark', 'light', 'mode', 'colors', 'colours'], run: () => ctx.go('more') },
     theme('theme-dark', 'Dark theme', 'moon', 'dark', ['night', 'dark mode', 'black']),
     theme('theme-light', 'Light theme', 'sun', 'light', ['day', 'bright', 'white', 'light mode']),

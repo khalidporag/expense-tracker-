@@ -8,6 +8,7 @@ import { useCategories } from '../hooks/useCategories.js'
 import { useSubcategories } from '../hooks/useSubcategories.js'
 import { db } from '../db/index.js'
 import { exportBackup, importBackup } from '../db/backup.js'
+import { clearData } from '../db/actions.js'
 import { nextDue } from '../lib/recurring.js'
 import { formatMoney } from '../lib/money.js'
 import { shortDay, today } from '../lib/dates.js'
@@ -120,6 +121,44 @@ function Backup({ onBack }) {
   )
 }
 
+const CLEAN = [
+  ['entries', 'All entries', 'Deletes every income and expense entry. Categories, budgets and savings stay.'],
+  ['savings', 'Savings plans', 'Deletes all savings plans, deposits and the savings target.'],
+  ['all', 'Everything', 'Erases all data and resets the app like a fresh install.'],
+]
+
+function CleanData({ onBack }) {
+  const [msg, setMsg] = useState('')
+  const run = async (scope, label) => {
+    if (!confirm(`Delete ${label.toLowerCase()}? This cannot be undone. Export a backup first if unsure.`)) return
+    if (scope === 'all' && !confirm('Last check: this erases ALL your data on this phone. Continue?')) return
+    try {
+      await clearData(scope)
+      setMsg(`${label} cleared.`)
+    } catch (err) {
+      setMsg(err.message)
+    }
+  }
+  return (
+    <div className="stack tight">
+      <Back onClick={onBack} />
+      <h1 className="title">Clean data</h1>
+      <p className="muted">Delete data you no longer need. This cannot be undone, so export a backup first if you might want it back.</p>
+      <ul className="list">
+        {CLEAN.map(([scope, label, hint]) => (
+          <li key={scope}>
+            <button className="row-card" onClick={() => run(scope, label)}>
+              <span className="badge" style={{ width: 40, height: 40 }}><Icon name="trash" /></span>
+              <span className="grow"><strong>Clear {label.toLowerCase()}</strong><span className="muted small">{hint}</span></span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      {msg && <p role="status" className="center">{msg}</p>}
+    </div>
+  )
+}
+
 function Appearance() {
   const [pref, setPref] = useState(getThemePref())
   const choose = (v) => { setThemePref(v); setPref(v) }
@@ -132,7 +171,7 @@ function Appearance() {
   )
 }
 
-const ITEMS = [['categories', 'tag', 'Categories'], ['recurring', 'repeat', 'Recurring'], ['backup', 'download', 'Backup & restore']]
+const ITEMS = [['categories', 'tag', 'Categories'], ['recurring', 'repeat', 'Recurring'], ['backup', 'download', 'Backup & restore'], ['clean', 'trash', 'Clean data']]
 
 export default function More({ onBack, initialView = null }) {
   const [view, setView] = useState(initialView)
@@ -143,6 +182,7 @@ export default function More({ onBack, initialView = null }) {
   if (view === 'categories') return <Categories onBack={back} />
   if (view === 'recurring') return <Recurring onBack={back} />
   if (view === 'backup') return <Backup onBack={back} />
+  if (view === 'clean') return <CleanData onBack={back} />
   return (
     <div className="stack tight">
       <Back onClick={onBack} />
