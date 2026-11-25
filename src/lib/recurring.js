@@ -25,3 +25,10 @@ export function nextDue(rule) {
   }
   return null
 }
+
+// When a paused rule is switched back on, the months it was paused are not back-filled: treat everything up to
+// `upTo` as already handled. Returns the new lastGenerated (unchanged if nothing was missed).
+export function skipMissed(rule, upTo) {
+  const missed = dueDates(rule, upTo)
+  return missed.length ? missed[missed.length - 1] : rule.lastGenerated ?? null
+}

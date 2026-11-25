@@ -16,28 +16,28 @@ export function useExitGuard() {
     history.pushState({ guard: true }, '')
     const onPop = () => {
       if (exiting.current) return
-      if (runBackHandlers()) history.pushState({ guard: true }, '')
-      else setAsking(true)
+      history.pushState({ guard: true }, '') // always keep a guard, so a Back press while the dialog is open is also caught
+      if (!runBackHandlers()) setAsking(true)
     }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
 
-  const stay = useCallback(() => {
-    setAsking(false)
-    history.pushState({ guard: true }, '')
-  }, [])
+  const stay = useCallback(() => setAsking(false), [])
 
   const exit = useCallback(() => {
     exiting.current = true
     setAsking(false)
     try { window.close() } catch { /* not allowed for this window */ }
-    setTimeout(() => { if (document.visibilityState === 'visible') history.back() }, 200)
+    setTimeout(() => { if (document.visibilityState === 'visible') history.go(-2) }, 200) // past the guard and the root entry
     setTimeout(() => {
-      // Still here: the browser would not let the page leave. The next Back press exits natively.
-      exiting.current = false
-      setHint(true)
-      setTimeout(() => setHint(false), 4500)
+      // Still here: the browser would not let the page leave. Drop the guard so the next Back press exits natively.
+      history.back()
+      setTimeout(() => {
+        exiting.current = false
+        setHint(true)
+        setTimeout(() => setHint(false), 4500)
+      }, 150)
     }, 900)
   }, [])
 

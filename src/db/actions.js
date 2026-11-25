@@ -1,5 +1,5 @@
 import { db } from './index.js'
-import { dueDates } from '../lib/recurring.js'
+import { dueDates, skipMissed } from '../lib/recurring.js'
 import { today } from '../lib/dates.js'
 import { defaultCategories } from './seed.js'
 
@@ -104,6 +104,9 @@ export const deleteDeposit = (id) => db.deposits.delete(id)
 
 // ---- recurring ----
 export async function saveRecurring(r) {
+  const before = r.id ? await db.recurring.get(r.id) : null
+  // Switching a paused rule back on must not create every occurrence it missed while paused.
+  if (before && !before.active && r.active) r = { ...r, lastGenerated: skipMissed(r, today()) }
   await (r.id ? db.recurring.put(r) : db.recurring.add({ ...r, lastGenerated: null }))
   await runRecurring() // a rule starting today or in the past takes effect immediately
 }

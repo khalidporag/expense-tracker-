@@ -32,8 +32,12 @@ export function setThemePref(pref) {
   } catch {
     /* storage unavailable (private mode): the choice lasts until the page closes */
   }
-  return applyTheme(normalizeTheme(pref))
+  const theme = applyTheme(normalizeTheme(pref))
+  window.dispatchEvent(new Event(THEME_EVENT)) // lets any open screen (Settings > Appearance) re-read the choice
+  return theme
 }
+
+export const THEME_EVENT = 'expense-tracker-theme-change'
 
 // While the preference is 'system', re-apply whenever the phone switches between light and dark.
 export function watchSystemTheme() {

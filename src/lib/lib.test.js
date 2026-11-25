@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { toMinor, formatMoney } from './money.js'
 import { addMonths, addDays, shiftMonth } from './dates.js'
-import { dueDates, nextDue } from './recurring.js'
+import { dueDates, nextDue, skipMissed } from './recurring.js'
 import { summarize, budgetStatus, filterTransactions, groupByDate } from './summary.js'
 
 describe('money', () => {
@@ -420,8 +420,25 @@ describe('monthly savings picture', () => {
   it('signals: unpaid installments and plans maturing within two months', () => {
     const plans = [{ id: 1, kind: 'dps', name: 'DPS', startDate: '2023-11-10', termMonths: 36, rateBp: 900, taxBp: 1000, installment: T(5000) }]
     const s = savingsSignals({ plans, deposits: [], todayISO: '2026-10-18', target: T(10000), saved: 0, kept: T(5000) })
-    expect(s.due).toEqual([{ name: 'DPS', amount: T(5000), dueDate: '2026-10-10', overdue: true, days: -8 }])
+    expect(s.due).toEqual([{ id: 1, name: 'DPS', amount: T(5000), dueDate: '2026-10-10', overdue: true, days: -8 }])
     expect(s.maturing).toHaveLength(1)
-    expect(s.maturing[0]).toMatchObject({ name: 'DPS', date: '2026-11-10', days: 23 })
+    expect(s.maturing[0]).toMatchObject({ id: 1, name: 'DPS', date: '2026-11-10', days: 23 })
+  })
+})
+
+describe('review fixes', () => {
+  it('toMinor rejects absurd or non-numeric amounts instead of storing them', () => {
+    expect(toMinor('1e999')).toBe(0)
+    expect(toMinor('99999999999999999')).toBe(0)
+    expect(toMinor('abc')).toBe(0)
+    expect(toMinor('')).toBe(0)
+    expect(toMinor('1500.50')).toBe(150050)
+  })
+  it('re-activating a paused rule skips the occurrences missed while paused', () => {
+    const rule = { frequency: 'monthly', startDate: '2026-01-05', lastGenerated: '2026-01-05' }
+    expect(dueDates(rule, '2026-07-10')).toHaveLength(6)
+    expect(skipMissed(rule, '2026-07-10')).toBe('2026-07-05')
+    expect(dueDates({ ...rule, lastGenerated: skipMissed(rule, '2026-07-10') }, '2026-07-10')).toEqual([])
+    expect(skipMissed({ ...rule, lastGenerated: '2026-07-05' }, '2026-07-10')).toBe('2026-07-05')
   })
 })

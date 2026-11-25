@@ -5,6 +5,7 @@ import Icon from '../components/Icon.jsx'
 import { Segmented, CategoryChips } from '../components/Bits.jsx'
 import SubcategoryPicker from '../components/SubcategoryPicker.jsx'
 import { useCategories } from '../hooks/useCategories.js'
+import { useSubcategories } from '../hooks/useSubcategories.js'
 import { db } from '../db/index.js'
 import { saveTransaction, deleteTransaction } from '../db/actions.js'
 import { toMinor, toInput, formatMoney } from '../lib/money.js'
@@ -72,6 +73,7 @@ export default function TransactionForm({ initial, defaultType, onClose }) {
     for (const t of recent) uses.set(t.categoryId, (uses.get(t.categoryId) || 0) + 1)
     return list.filter((c) => c.kind === type).sort((a, b) => (uses.get(b.id) || 0) - (uses.get(a.id) || 0) || a.id - b.id)
   }, [list, recent, type])
+  const { byCategory } = useSubcategories()
   const chosen = cats.some((c) => c.id === categoryId) ? categoryId : cats[0]?.id
   const category = cats.find((c) => c.id === chosen)
   const minor = amount ? toMinor(amount) : 0
@@ -116,7 +118,7 @@ export default function TransactionForm({ initial, defaultType, onClose }) {
   const save = async () => {
     if (!valid) return
     const data = { ...initial, type, amount: minor, categoryId: chosen, date, note: note.trim() }
-    if (type === 'expense' && subId != null) data.subcategoryId = subId
+    if (type === 'expense' && subId != null && (byCategory.get(chosen) || []).some((s) => s.id === subId)) data.subcategoryId = subId
     else delete data.subcategoryId
     await saveTransaction(data)
     onClose()

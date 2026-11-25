@@ -167,7 +167,7 @@ export function buildActions({ info, rows, totals, prevByCategory, rules, todayI
     for (const d of savings.due) {
       if (d.days > 7) continue
       out.push({
-        id: `deposit-${d.name}`, kind: 'deposit', weight: 1.5e12 - d.days,
+        id: `deposit-${d.id ?? d.name}`, kind: 'deposit', weight: 1.5e12 - d.days,
         title: `${d.name} deposit ${formatMoney(d.amount)} ${d.overdue ? 'was due' : 'is due'} on ${dayMonth(d.dueDate)}`,
         detail: 'Record it when you pay, so your savings stay accurate.',
         cta: { label: 'Record deposit', go: 'savings' },
@@ -187,7 +187,7 @@ export function buildActions({ info, rows, totals, prevByCategory, rules, todayI
       })
     }
     for (const m of savings.maturing) {
-      out.push({ id: `maturity-${m.name}`, kind: 'maturity', weight: 0.9e12 - m.days, title: `${m.name} matures on ${dayMonth(m.date)}`, detail: `About ${formatTaka(m.amount)} comes back. Decide where to put it next.`, cta: { label: 'See plan', go: 'savings' } })
+      out.push({ id: `maturity-${m.id ?? m.name}`, kind: 'maturity', weight: 0.9e12 - m.days, title: `${m.name} matures on ${dayMonth(m.date)}`, detail: `About ${formatTaka(m.amount)} comes back. Decide where to put it next.`, cta: { label: 'See plan', go: 'savings' } })
     }
   }
 

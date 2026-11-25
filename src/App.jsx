@@ -47,6 +47,27 @@ export default function App() {
   // Create any recurring entries that came due since the app was last opened.
   useEffect(() => { runRecurring() }, [])
 
+  // An installed app can stay in memory for days. When it comes back to the foreground: create entries that came due,
+  // and if the month rolled over while it was away, move "this month" forward (unless the user was browsing another month).
+  const lastMonth = useRef(currentMonth())
+  const [, setDay] = useState(0)
+  useEffect(() => {
+    const resume = () => {
+      if (document.visibilityState !== 'visible') return
+      runRecurring()
+      const now = currentMonth()
+      if (now !== lastMonth.current) {
+        const was = lastMonth.current
+        lastMonth.current = now
+        setMonth((m) => (m === was ? now : m))
+      }
+      setDay((n) => n + 1) // re-render so "today", days left and safe-to-spend are recalculated
+    }
+    document.addEventListener('visibilitychange', resume)
+    window.addEventListener('focus', resume)
+    return () => { document.removeEventListener('visibilitychange', resume); window.removeEventListener('focus', resume) }
+  }, [])
+
   // Navigate between tabs; `opts` carries a History filter, a Settings sub-view or an Insights section.
   const go = useCallback((to, opts = {}) => {
     if (to === 'history') setHistoryPreset(opts.from || opts.categoryId != null || opts.subcategoryId != null || opts.text ? { ...opts, nonce: ++presetCount.current } : null)
