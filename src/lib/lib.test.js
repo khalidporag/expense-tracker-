@@ -122,7 +122,7 @@ describe('theme preference', () => {
   })
 })
 
-import { subBreakdown, monthSeries, subKey } from './subcategories.js'
+import { subBreakdown, monthSeries, subKey, parseSubNames, subSuggestions, subBudgetRows, allocation } from './subcategories.js'
 import { groupDeltas } from './insights.js'
 
 describe('subcategories', () => {
@@ -150,6 +150,24 @@ describe('subcategories', () => {
     const key = (t) => subKey(t, new Set([1, 2]))
     const d = groupDeltas([e(1, '2026-10-02', 200, 1)], [e(2, '2026-09-02', 100, 1), e(3, '2026-09-25', 900, 1)], 18, key)
     expect(d[0]).toEqual({ key: 1, cur: 200, prev: 100, delta: 100, pct: 100 })
+  })
+  it('parses several typed subcategory names, dropping blanks and duplicates', () => {
+    expect(parseSubNames('Electricity, gas ;  Water\n,, electricity')).toEqual(['Electricity', 'gas', 'Water'])
+    expect(parseSubNames('Gas, Rent', ['gas'])).toEqual(['Rent'])
+    expect(parseSubNames('   ')).toEqual([])
+  })
+  it('suggests subcategories by category name, skipping ones already used', () => {
+    expect(subSuggestions('Bills', ['Gas'])).toEqual(['Electricity', 'Water', 'Internet', 'Phone', 'Rent'])
+    expect(subSuggestions('Zakat')).toEqual([])
+  })
+  it('tracks subcategory limits inside a category budget', () => {
+    const subs = [{ id: 1, categoryId: 3, name: 'Electricity', limit: 200000 }, { id: 2, categoryId: 3, name: 'Gas', limit: 100000 }, { id: 4, categoryId: 3, name: 'Phone' }]
+    const txs = [e(1, '2026-10-02', 230000, 1), e(2, '2026-10-03', 85000, 2), e(3, '2026-10-04', 5000, 4), { ...e(4, '2026-10-05', 999, 1), categoryId: 9 }]
+    const rows = subBudgetRows(subs, txs)
+    expect(rows.map((r) => [r.name, r.spent, r.state])).toEqual([['Electricity', 230000, 'over'], ['Gas', 85000, 'warn']])
+    expect(rows[0].remaining).toBe(-30000)
+    expect(allocation(subs, 400000)).toEqual({ allocated: 300000, left: 100000 })
+    expect(allocation(subs, 250000).left).toBe(-50000)
   })
   it('filters transactions by subcategory', () => {
     const txs = [e(1, '2026-10-02', 1, 1), e(2, '2026-10-02', 1, 2), e(3, '2026-10-02', 1)]

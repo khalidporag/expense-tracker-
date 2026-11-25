@@ -5,6 +5,7 @@ import { Empty, Pill, Progress } from '../components/Bits.jsx'
 import BudgetForm from '../forms/BudgetForm.jsx'
 import { useMonthData } from '../hooks/useMonthData.js'
 import { moveBudget } from '../db/actions.js'
+import { subBudgetRows } from '../lib/subcategories.js'
 import { allowance, projectSpend, suggestMove } from '../lib/insights.js'
 import { formatMoney, formatTaka } from '../lib/money.js'
 
@@ -40,8 +41,9 @@ function Summary({ d }) {
   )
 }
 
-function BudgetCard({ r, category, info, onClick }) {
+function BudgetCard({ r, category, info, subs, txs, onClick }) {
   const live = info.isCurrent
+  const subRows = subBudgetRows(subs, txs)
   const pill = r.state === 'over'
     ? <Pill tone="over" size="lg">Over by {formatMoney(-r.remaining)}</Pill>
     : r.state === 'warn' ? <Pill tone="warn" size="lg">{formatMoney(r.remaining)} left</Pill>
@@ -64,6 +66,22 @@ function BudgetCard({ r, category, info, onClick }) {
         <span><strong>{formatMoney(r.spent)}</strong> <span className="muted">of {formatMoney(r.limit)}</span></span>
         <span className={r.state === 'over' ? 'over-ink' : r.state === 'warn' ? 'warn-ink' : 'muted'} style={{ fontWeight: 600 }}>{side}</span>
       </div>
+      {subRows.length > 0 && (
+        <div className="stack tight" aria-label={`${r.name} subcategory limits`} style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--soft)', gap: 10 }}>
+          {subRows.map((x) => (
+            <div key={x.subId}>
+              <div className="between" style={{ fontSize: 14 }}>
+                <strong>{x.name}</strong>
+                <span className={x.state === 'over' ? 'over-ink' : x.state === 'warn' ? 'warn-ink' : 'muted'} style={{ fontWeight: 600 }}>
+                  {x.state === 'over' ? `Over by ${formatMoney(-x.remaining)}` : `${formatMoney(x.remaining)} left`}
+                </span>
+              </div>
+              <div style={{ margin: '6px 0 4px' }}><Progress ratio={x.ratio} state={x.state} pace={live ? info.ratio : undefined} label={`${x.name} limit used`} /></div>
+              <div className="muted small">{formatMoney(x.spent)} of {formatMoney(x.limit)}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </article>
   )
 }
@@ -73,7 +91,7 @@ export default function Budgets({ month, onMonth }) {
   const [editing, setEditing] = useState(null) // category being edited
   const [dismissed, setDismissed] = useState(false)
   if (!d.ready) return null
-  const { rows, budgets, cats, byId, info, hasBudget, unbudgeted } = d
+  const { rows, budgets, cats, byId, info, hasBudget, unbudgeted, txs, subsByCategory } = d
   const without = cats.filter((c) => c.kind === 'expense' && !rows.some((r) => r.categoryId === c.id))
   const move = info.isCurrent && !dismissed ? suggestMove(rows) : null
 
@@ -88,7 +106,7 @@ export default function Budgets({ month, onMonth }) {
 
       {rows.map((r) => (
         <React.Fragment key={r.categoryId}>
-          <BudgetCard r={r} category={byId.get(r.categoryId)} info={info} onClick={() => setEditing(byId.get(r.categoryId))} />
+          <BudgetCard r={r} category={byId.get(r.categoryId)} info={info} subs={subsByCategory.get(r.categoryId) || []} txs={txs} onClick={() => setEditing(byId.get(r.categoryId))} />
           {move && move.toId === r.categoryId && (
             <aside className="suggest" aria-label="Suggestion">
               <div className="row" style={{ alignItems: 'flex-start', gap: 12 }}>

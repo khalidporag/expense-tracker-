@@ -49,9 +49,24 @@ export async function deleteSubcategory(id) {
 // ---- budgets (limit 0 or empty removes the budget) ----
 export async function setBudget(categoryId, limit) {
   const existing = await db.budgets.where('categoryId').equals(categoryId).first()
-  if (!(limit > 0)) return existing && db.budgets.delete(existing.id)
+  if (!(limit > 0)) {
+    // Without a category budget its subcategory limits mean nothing, so they go too.
+    await db.transaction('rw', db.budgets, db.subcategories, async () => {
+      if (existing) await db.budgets.delete(existing.id)
+      await db.subcategories.where('categoryId').equals(categoryId).modify((s) => { delete s.limit })
+    })
+    return
+  }
   return existing ? db.budgets.update(existing.id, { limit }) : db.budgets.add({ categoryId, limit })
 }
+
+// Optional monthly limit on a subcategory (a share of its category's budget). 0 / empty removes it.
+export const setSubLimit = (id, limit) =>
+  db.subcategories.where(':id').equals(id).modify((s) => { if (limit > 0) s.limit = limit; else delete s.limit })
+
+// Adds several subcategories at once (names already de-duplicated by the caller). Returns their ids.
+export const addSubcategories = (categoryId, names) =>
+  db.transaction('rw', db.subcategories, () => Promise.all(names.map((name) => db.subcategories.add({ categoryId, name }))))
 
 // Shifts monthly budget from one category to another (the donor keeps at least ৳1).
 export async function moveBudget(fromId, toId, amount) {

@@ -31,6 +31,7 @@ export async function importBackup(text) {
   // Keep only well-formed subcategories under existing categories; drop dangling labels from entries and rules.
   const catIds = new Set(data.categories.map((c) => c.id))
   data.subcategories = data.subcategories.filter((s) => s && s.name && catIds.has(s.categoryId))
+  data.subcategories = data.subcategories.map(({ limit, ...s }) => (Number.isInteger(limit) && limit > 0 ? { ...s, limit } : s)) // keep only a valid subcategory budget
   const subIds = new Set(data.subcategories.map((s) => s.id))
   const clean = (row) => {
     if (row.subcategoryId == null || subIds.has(row.subcategoryId)) return row
